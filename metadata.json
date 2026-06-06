@@ -1,0 +1,6 @@
+{
+  "name": "PodSyndiConnect Simulator",
+  "description": "An interactive simulation dashboard, matching engine, profile builder, and WordPress PHP plugin generator for PodSyndiConnect.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
