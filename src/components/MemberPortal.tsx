@@ -838,31 +838,56 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
             </div>
 
+
+
           </div>
         ) : portalSubTab === 'connections' ? (
           <div className="space-y-6 h-full flex flex-col">
             {!expandedConnectionId ? (
               <>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="bg-red-50 border text-left border-red-200 rounded-2xl shadow-sm p-6 mb-6 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-bl-full -mr-8 -mt-8"></div>
+                  <div className="relative z-10 max-w-xl">
+                    <h4 className="font-extrabold text-red-900 text-lg flex items-center gap-2 mb-2">
+                      <Calendar className="w-5 h-5 text-red-600" />
+                      Calendar Integration
+                    </h4>
+                    <p className="text-red-800/90 text-sm mb-3">
+                      Automate scheduling by syncing your available times and booking interviews directly to your Google Calendar.
+                    </p>
+                    <div className="bg-white/80 p-3 rounded-lg border border-red-100 text-xs">
+                      <div className="flex gap-2">
+                        <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-red-800/90 leading-relaxed font-medium">
+                          <strong>Why connect?</strong> Connecting your Google Calendar allows PodSyndiConnect to automatically create calendar holds to prevent double-booking.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="relative z-10 shrink-0">
+                    {googleToken ? (
+                      <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-4 py-2.5 rounded-lg border border-emerald-100 shadow-sm whitespace-nowrap">
+                        <Calendar className="w-4 h-4" />
+                        Connected ✓
+                      </div>
+                    ) : (
+                      <button
+                        disabled={isLoggingIn}
+                        onClick={handleGoogleConnect}
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-md cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                      >
+                        <Calendar className="w-4 h-4" />
+                        Connect Calendar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mt-2">
                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                      <span className="p-1 px-2.2 text-xs bg-emerald-500/10 text-emerald-700 rounded font-bold font-mono">{connections.length}</span>
                      Network Connection Requests
                    </h3>
-                   {googleToken ? (
-                     <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                       <Calendar className="w-3.5 h-3.5" />
-                       Calendar Connected
-                     </div>
-                   ) : (
-                     <button
-                       disabled={isLoggingIn}
-                       onClick={handleGoogleConnect}
-                       className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
-                     >
-                       <Calendar className="w-3.5 h-3.5" />
-                       Connect Google Calendar
-                     </button>
-                   )}
                  </div>
      
                  {connections.length === 0 ? (
