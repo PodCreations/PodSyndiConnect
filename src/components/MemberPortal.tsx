@@ -41,6 +41,7 @@ interface MemberPortalProps {
   setSelectedViewerGuestId: (id: string) => void;
   setSelectedViewerHostId: (id: string) => void;
   onSelectPreview: (type: 'guest' | 'host', id: string) => void;
+  setActiveWorkspaceTab: (tab: 'home' | 'studio' | 'database' | 'code' | 'portal' | 'aimatch') => void;
 }
 
 export const MemberPortal: React.FC<MemberPortalProps> = ({
@@ -53,6 +54,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   setSelectedViewerGuestId,
   setSelectedViewerHostId,
   onSelectPreview,
+  setActiveWorkspaceTab,
 }) => {
   // We'll manage state for user's guest and host setup.
   // We'll tie them to a specific persistent ID: 'my_guest_profile' and 'my_host_profile'
@@ -127,6 +129,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
       recordingUrl: null as string | null,
       recordingConfirmedByMe: false,
       recordingConfirmedByThem: false,
+      reviewTitle: null as string | null,
       reviewText: null as string | null,
       reviewRating: null as number | null
     },
@@ -146,6 +149,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
       bookedTime: null as string | null,
       recordingConfirmedByMe: false,
       recordingConfirmedByThem: false,
+      reviewTitle: null as string | null,
       reviewText: null as string | null,
       reviewRating: null as number | null
     }
@@ -156,6 +160,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [recordingLinkInput, setRecordingLinkInput] = useState('');
+  const [reviewTitleInput, setReviewTitleInput] = useState('');
   const [reviewInput, setReviewInput] = useState('');
   const [reviewRatingInput, setReviewRatingInput] = useState(5.0);
 
@@ -323,12 +328,69 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   };
 
   const submitReview = (id: string) => {
-    if(!reviewInput.trim()) return;
+    if(!reviewInput.trim() || !reviewTitleInput.trim()) {
+       triggerNotification('Please enter a review title and text.');
+       return;
+    }
+
+    const conn = connections.find(c => c.id === id);
+
     setConnections(prev => prev.map(c => 
       c.id === id 
-        ? { ...c, reviewText: reviewInput, reviewRating: reviewRatingInput, messages: [...c.messages, { sender: 'me', text: `Review submitted: ${reviewRatingInput} stars`, date: 'Just now' }] } 
+        ? { ...c, reviewTitle: reviewTitleInput, reviewText: reviewInput, reviewRating: reviewRatingInput, messages: [...c.messages, { sender: 'me', text: `Review submitted: ${reviewRatingInput} stars`, date: 'Just now' }] } 
         : c
     ));
+
+    if (conn) {
+      const isReviewingHost = conn.fromType === 'Host';
+      const myName = isReviewingHost ? (existingMyGuest?.displayName || guestForm.displayName || 'You') : (existingMyHost?.showName || hostForm.showName || 'You');
+      const myPhoto = isReviewingHost ? (existingMyGuest?.avatarUrl || guestForm.avatarUrl || '') : (existingMyHost?.logoUrl || hostForm.logoUrl || '');
+      const myType = isReviewingHost ? 'Guest' : 'Host';
+
+      const newReview = {
+        id: `rev_${Date.now()}`,
+        authorName: myName,
+        authorType: myType as 'Guest'|'Host',
+        authorPhoto: myPhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
+        rating: reviewRatingInput,
+        title: reviewTitleInput,
+        text: reviewInput,
+        date: 'Just now'
+      };
+
+      if (isReviewingHost) {
+        // Find host by name and update
+        const hostIndex = hosts.findIndex(h => h.showName === conn.fromName);
+        if (hostIndex !== -1) {
+          const updatedHosts = [...hosts];
+          const host = updatedHosts[hostIndex];
+          updatedHosts[hostIndex] = {
+            ...host,
+            reviews: host.reviews ? [...host.reviews, newReview] : [newReview],
+            reviewRating: host.reviews 
+              ? ((host.reviewRating || 0) * host.reviews.length + newReview.rating) / (host.reviews.length + 1)
+              : newReview.rating
+          };
+          onUpdateHosts(updatedHosts);
+        }
+      } else {
+        const guestIndex = guests.findIndex(g => g.displayName === conn.fromName);
+        if (guestIndex !== -1) {
+          const updatedGuests = [...guests];
+          const guest = updatedGuests[guestIndex];
+          updatedGuests[guestIndex] = {
+            ...guest,
+            reviews: guest.reviews ? [...guest.reviews, newReview] : [newReview],
+            reviewRating: guest.reviews
+              ? ((guest.reviewRating || 0) * guest.reviews.length + newReview.rating) / (guest.reviews.length + 1)
+              : newReview.rating
+          };
+          onUpdateGuests(updatedGuests);
+        }
+      }
+    }
+
+    setReviewTitleInput('');
     setReviewInput('');
     setReviewRatingInput(5.0);
     advanceWorkflow(id);
@@ -926,12 +988,36 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                                                 </div>
                                               </div>
                                             )}
-                                            {idx === 4 && (
+                                            {idx === 4 && (() => {
+                                              const reviewerName = activeConn.fromType === 'Host' 
+                                                ? (existingMyGuest?.displayName || guestForm.displayName || 'You') 
+                                                : (existingMyHost?.showName || hostForm.showName || 'You');
+
+                                              const reviewerPhoto = activeConn.fromType === 'Host'
+                                                ? (existingMyGuest?.avatarUrl || guestForm.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face')
+                                                : (existingMyHost?.showCoverUrl || hostForm.showCoverUrl || 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=150&h=150&fit=crop');
+
+                                              return (
                                               <div className="bg-white border border-slate-200 rounded-xl p-4 mt-2 mb-2 w-full">
                                                 {activeConn.reviewText ? (
                                                   <div className="flex flex-col gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
                                                     <div className="flex items-center justify-between">
-                                                      <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-widest">Your Review</span>
+                                                      <div className="flex items-center gap-2">
+                                                        <img src={reviewerPhoto} alt={reviewerName} className="w-6 h-6 rounded-full object-cover border border-slate-200 shadow-sm" />
+                                                        <a 
+                                                          href="#" 
+                                                          onClick={(e) => {
+                                                            e.preventDefault();
+                                                            const reviewerType = activeConn.fromType === 'Host' ? 'guest' : 'host';
+                                                            const reviewerProfileId = reviewerType === 'guest' ? 'my_guest_profile' : 'my_host_profile';
+                                                            onSelectPreview(reviewerType, reviewerProfileId);
+                                                            setActiveWorkspaceTab('studio');
+                                                          }}
+                                                          className="font-bold text-emerald-600 hover:text-emerald-700 underline decoration-emerald-200 underline-offset-2"
+                                                        >
+                                                          {reviewerName}
+                                                        </a>
+                                                      </div>
                                                       {activeConn.reviewRating !== undefined && activeConn.reviewRating !== null && (
                                                         <div className="flex text-amber-500 text-xs">
                                                           {'★'.repeat(Math.floor(activeConn.reviewRating))}
@@ -940,6 +1026,9 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                                                         </div>
                                                       )}
                                                     </div>
+                                                    {activeConn.reviewTitle && (
+                                                      <h5 className="text-sm font-bold text-slate-900 leading-snug">{activeConn.reviewTitle}</h5>
+                                                    )}
                                                     <p className="text-xs text-slate-700 italic">"{activeConn.reviewText}"</p>
                                                   </div>
                                                 ) : (
@@ -968,6 +1057,14 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                                                       </div>
                                                     </div>
 
+                                                    <input
+                                                      type="text"
+                                                      value={reviewTitleInput}
+                                                      onChange={(e) => setReviewTitleInput(e.target.value)}
+                                                      placeholder="Review Title (e.g., Amazing interview!)"
+                                                      className="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 w-full mb-1"
+                                                    />
+
                                                     <textarea 
                                                       value={reviewInput}
                                                       onChange={(e) => setReviewInput(e.target.value)}
@@ -983,7 +1080,8 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                                                   </div>
                                                 )}
                                               </div>
-                                            )}
+                                              );
+                                            })()}
                                         </div>
                                         {idx < 2 && (
                                           <button 

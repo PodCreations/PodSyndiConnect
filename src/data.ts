@@ -26,7 +26,40 @@ export const INITIAL_GUESTS: GuestProfile[] = [
     preferredFormats: ['Interview', 'Panel/Roundtable'],
     tags: ['ArtificialIntelligence', 'DeepLearning', 'TechEthics', 'Author'],
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face',
-    emailContact: 'evelyn.m@techresearch.org'
+    emailContact: 'evelyn.m@techresearch.org',
+    reviewRating: 4.8,
+    reviews: [
+      {
+        id: 'rev_1',
+        authorName: 'Tech Today Media',
+        authorType: 'Host',
+        authorPhoto: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=150&h=150&fit=crop&crop=face',
+        rating: 5,
+        title: 'Amazing interview!',
+        text: 'Evelyn brought so much clarity to complex AI topics. Our audience loved the actionable insights and the engaging storytelling. Highly recommend as a guest!',
+        date: '2 weeks ago'
+      },
+      {
+        id: 'rev_1b',
+        authorName: 'Future Tech Voices',
+        authorType: 'Host',
+        authorPhoto: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150&h=150&fit=crop&crop=face',
+        rating: 4.5,
+        title: 'Insighful and engaging',
+        text: 'Her perspective on deep learning is unparalleled. She engaged naturally with the audience questions.',
+        date: '1 month ago'
+      },
+      {
+        id: 'rev_1c',
+        authorName: 'AI Explorers',
+        authorType: 'Host',
+        authorPhoto: 'https://images.unsplash.com/photo-1581456495146-65a71b2c8e52?w=150&h=150&fit=crop&crop=face',
+        rating: 5,
+        title: 'Exceptional knowledge',
+        text: 'A profound understanding of tech ethics. Exactly what our listeners wanted.',
+        date: '3 months ago'
+      }
+    ]
   },
   {
     id: 'guest_2',
@@ -110,7 +143,40 @@ export const INITIAL_HOSTS: HostProfile[] = [
     requiredExperienceLevel: 'Expert',
     tags: ['Tech', 'AI', 'Ethics', 'Science'],
     logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&h=150&fit=crop',
-    hostEmail: 'booking@aihorizon.io'
+    hostEmail: 'booking@aihorizon.io',
+    reviewRating: 4.5,
+    reviews: [
+      {
+        id: 'rev_2',
+        authorName: 'Dr. Evelyn Martinez',
+        authorType: 'Guest',
+        authorPhoto: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face',
+        rating: 4.5,
+        title: 'Great host!',
+        text: 'Alex was incredibly well-prepared and asked thoughtful questions that allowed us to dive deep into the nuances of AI ethics. A fantastic experience.',
+        date: '1 month ago'
+      },
+      {
+        id: 'rev_2b',
+        authorName: 'Marcus "Sully" Sullivan',
+        authorType: 'Guest',
+        authorPhoto: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
+        rating: 5,
+        title: 'Excellent production value',
+        text: 'The onboarding was seamless. They really care about making you sound good.',
+        date: '2 months ago'
+      },
+      {
+        id: 'rev_2c',
+        authorName: 'Jenna & Mark Woods',
+        authorType: 'Guest',
+        authorPhoto: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face',
+        rating: 4.8,
+        title: 'Loved the energy',
+        text: 'Alex brings amazing energy to his interviews. Thoroughly enjoyed my time.',
+        date: '3 months ago'
+      }
+    ]
   },
   {
     id: 'host_2',

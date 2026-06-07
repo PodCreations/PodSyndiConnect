@@ -1,3 +1,14 @@
+export interface ProfileReview {
+  id: string;
+  authorName: string;
+  authorType: 'Guest' | 'Host';
+  authorPhoto: string;
+  rating: number;
+  title: string;
+  text: string;
+  date: string;
+}
+
 export interface GuestProfile {
   id: string;
   displayName: string;
@@ -16,6 +27,7 @@ export interface GuestProfile {
   emailContact?: string;
   availability?: string;
   reviewRating?: number;
+  reviews?: ProfileReview[];
 }
 
 export interface HostProfile {
@@ -37,6 +49,7 @@ export interface HostProfile {
   hostEmail?: string;
   availability?: string;
   reviewRating?: number;
+  reviews?: ProfileReview[];
 }
 
 export interface MatchWeights {

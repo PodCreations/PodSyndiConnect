@@ -501,6 +501,7 @@ export default function App() {
                 setSelectedViewerGuestId={setSelectedViewerGuestId}
                 setSelectedViewerHostId={setSelectedViewerHostId}
                 onSelectPreview={handleSelectPreview}
+                setActiveWorkspaceTab={setActiveWorkspaceTab}
               />
             )}
 

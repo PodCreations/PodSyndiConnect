@@ -2,7 +2,7 @@ import React from 'react';
 import { GuestProfile, HostProfile, MatchWeights } from '../types';
 import { calculateMatchScore } from '../utils';
 import { BadgeWidget } from './BadgeWidget';
-import { getTopicColor, CATEGORIZED_TOPICS } from '../data';
+import { getTopicColor, CATEGORIZED_TOPICS, INITIAL_GUESTS, INITIAL_HOSTS } from '../data';
 import defaultHeaderImage from '../assets/images/brand_header_1780775563058.png';
 import { 
   Users, 
@@ -38,7 +38,9 @@ import {
   Send,
   HelpCircle,
   FileText,
-  Upload
+  Upload,
+  Star,
+  StarHalf
 } from 'lucide-react';
 
 interface LiveStudioProps {
@@ -72,6 +74,7 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
   // Interactive Template State Integrations
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [playbackTime, setPlaybackTime] = React.useState(8);
+  const [showReviewsModal, setShowReviewsModal] = React.useState(false);
   const [activeAction, setActiveAction] = React.useState<'book' | 'apply' | null>(null);
   const [formSubmitted, setFormSubmitted] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState('2026-06-15');
@@ -150,6 +153,12 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
         : "You are logged in as a Show Host. View Guest profiles to see match percentages!";
     }
   }
+
+  const guestReviews = (previewProfile as GuestProfile).reviews || INITIAL_GUESTS.find(g => g.id === previewProfile.id)?.reviews || [];
+  const displayedGuestReviews = guestReviews.slice(0, 2);
+
+  const hostReviews = (previewProfile as HostProfile).reviews || INITIAL_HOSTS.find(h => h.id === previewProfile.id)?.reviews || [];
+  const displayedHostReviews = hostReviews.slice(0, 2);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full items-start">
@@ -652,6 +661,63 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                   </div>
                 </div>
 
+                {/* 7.5. REVIEWS SECTION */}
+                {guestReviews.length > 0 && (
+                  <div className="space-y-4 relative">
+                    <span className="absolute -top-3.5 right-6 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.2 font-mono text-[7px] text-[#D4AF37]">
+                      [acf: psc_guest_reviews]
+                    </span>
+                    <h2 className="font-display font-black text-xl uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-[#D4AF37]" />
+                      Reviews & Testimonials
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {displayedGuestReviews.map(review => (
+                        <div key={review.id} className="bg-slate-50 border border-slate-200 p-5 rounded-2xl shadow-3xs space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <img src={review.authorPhoto} alt={review.authorName} className="w-10 h-10 rounded-full border border-slate-200 object-cover shadow-sm" />
+                              <div>
+                                <div className="text-sm font-bold text-slate-900 group">
+                                  <a href="#" className="hover:text-[#D4AF37] hover:underline underline-offset-2 transition-colors">
+                                    {review.authorName}
+                                  </a>
+                                </div>
+                                <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                                  {review.authorType} &bull; {review.date}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex text-amber-500 text-xs">
+                              {Array.from({ length: 5 }).map((_, i) => {
+                                const rating = review.rating || 0;
+                                if (i < Math.floor(rating)) return <Star key={i} className="w-3.5 h-3.5 fill-current" />;
+                                if (i === Math.floor(rating) && rating % 1 !== 0) return <StarHalf key={i} className="w-3.5 h-3.5 fill-current" />;
+                                return <Star key={i} className="w-3.5 h-3.5 text-slate-300" />;
+                              })}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900 mb-1 leading-snug">{review.title}</h4>
+                            <p className="text-sm text-slate-700 italic leading-relaxed">"{review.text}"</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {guestReviews.length > 2 && (
+                      <div className="text-center mt-4">
+                        <button 
+                          onClick={() => setShowReviewsModal(true)}
+                          className="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-[#D4AF37] px-6 py-2 rounded-xl text-sm font-bold uppercase tracking-wider transition-all shadow-sm"
+                        >
+                          See All Reviews ({guestReviews.length})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* 8. CALL-TO-ACTION SECTION WITH INTERACTIVE SCHEDULER POPUP */}
                 <div className="pt-6 border-t border-slate-200 flex flex-col items-center justify-center space-y-4">
                   <div className="text-center space-y-1.5">
@@ -1064,6 +1130,63 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                   </div>
                 </div>
 
+                {/* 7.5. REVIEWS SECTION */}
+                {hostReviews.length > 0 && (
+                  <div className="space-y-4 relative">
+                    <span className="absolute -top-3.5 right-6 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.2 font-mono text-[7px] text-sky-500">
+                      [acf: psc_host_reviews]
+                    </span>
+                    <h2 className="font-display font-black text-xl uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-sky-500" />
+                      Reviews & Testimonials
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {displayedHostReviews.map(review => (
+                        <div key={review.id} className="bg-slate-50 border border-slate-200 p-5 rounded-2xl shadow-3xs space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <img src={review.authorPhoto} alt={review.authorName} className="w-10 h-10 rounded-full border border-slate-200 object-cover shadow-sm" />
+                              <div>
+                                <div className="text-sm font-bold text-slate-900 group">
+                                  <a href="#" className="hover:text-sky-500 hover:underline underline-offset-2 transition-colors">
+                                    {review.authorName}
+                                  </a>
+                                </div>
+                                <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                                  {review.authorType} &bull; {review.date}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex text-sky-500 text-xs">
+                              {Array.from({ length: 5 }).map((_, i) => {
+                                const rating = review.rating || 0;
+                                if (i < Math.floor(rating)) return <Star key={i} className="w-3.5 h-3.5 fill-current" />;
+                                if (i === Math.floor(rating) && rating % 1 !== 0) return <StarHalf key={i} className="w-3.5 h-3.5 fill-current" />;
+                                return <Star key={i} className="w-3.5 h-3.5 text-slate-300" />;
+                              })}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900 mb-1 leading-snug">{review.title}</h4>
+                            <p className="text-sm text-slate-700 italic leading-relaxed">"{review.text}"</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {hostReviews.length > 2 && (
+                      <div className="text-center mt-4">
+                        <button 
+                          onClick={() => setShowReviewsModal(true)}
+                          className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-600 px-6 py-2 rounded-xl text-sm font-bold uppercase tracking-wider transition-all shadow-sm"
+                        >
+                          See All Reviews ({hostReviews.length})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* 8. CALL-TO-ACTION SECTION WITH INTERACTIVE APPLICATION WORKFLOW */}
                 <div className="pt-6 border-t border-slate-200 flex flex-col items-center justify-center space-y-4">
                   <div className="text-center space-y-1.5">
@@ -1429,7 +1552,64 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
         </div>
 
       </div>
-
+      
+      {/* REVIEWS MODAL */}
+      {showReviewsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+              <h2 className={`font-display border-b-0 pb-0 text-xl font-black uppercase tracking-wider flex items-center gap-2 ${isPreviewGuest ? 'text-slate-800' : 'text-slate-800'}`}>
+                <Star className={`w-6 h-6 ${isPreviewGuest ? 'text-[#D4AF37]' : 'text-sky-500'}`} />
+                All Reviews ({isPreviewGuest ? guestReviews.length : hostReviews.length})
+              </h2>
+              <button 
+                onClick={() => setShowReviewsModal(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors border border-slate-200 shadow-sm"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+              <div className="flex flex-col gap-5">
+                {(isPreviewGuest ? guestReviews : hostReviews).map(review => (
+                  <div key={review.id} className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-4">
+                        <img src={review.authorPhoto} alt={review.authorName} className="w-12 h-12 rounded-full border border-slate-200 object-cover shadow-sm" />
+                        <div>
+                          <div className="font-bold text-slate-900 group text-base">
+                            <a href="#" className={`hover:underline underline-offset-2 transition-colors ${isPreviewGuest ? 'hover:text-[#D4AF37]' : 'hover:text-sky-500'}`}>
+                              {review.authorName}
+                            </a>
+                          </div>
+                          <div className="text-[11px] uppercase font-bold text-slate-500 tracking-widest mt-0.5">
+                            {review.authorType} &bull; {review.date}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`flex text-xs ${isPreviewGuest ? 'text-amber-500' : 'text-sky-500'}`}>
+                        {Array.from({ length: 5 }).map((_, i) => {
+                          const rating = review.rating || 0;
+                          if (i < Math.floor(rating)) return <Star key={i} className="w-4 h-4 fill-current" />;
+                          if (i === Math.floor(rating) && rating % 1 !== 0) return <StarHalf key={i} className="w-4 h-4 fill-current" />;
+                          return <Star key={i} className="w-4 h-4 text-slate-200" />;
+                        })}
+                      </div>
+                    </div>
+                    <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                      <h4 className="text-sm font-bold text-slate-900 mb-2 leading-relaxed">{review.title}</h4>
+                      <p className="text-base text-slate-700 italic leading-relaxed">"{review.text}"</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
