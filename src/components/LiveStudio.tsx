@@ -1224,6 +1224,7 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
               {/* DYNAMIC PROGRESS LIST matching the requested UI of the Design HTML */}
               <div className="space-y-3.5 pt-2">
                 {[
+                  { label: 'Past Rating Performance', weightKey: 'reviews', field: 'reviews' },
                   { label: 'Topic Overlap', weightKey: 'topics', field: 'topics' },
                   { label: 'Industry Alignment', weightKey: 'industry', field: 'industry' },
                   { label: 'Experience Factor', weightKey: 'experience', field: 'experience' },

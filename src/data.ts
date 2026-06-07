@@ -1,13 +1,14 @@
 import { GuestProfile, HostProfile, MatchWeights } from './types';
 
 export const DEFAULT_WEIGHTS: MatchWeights = {
-  topics: 0.25,
-  industry: 0.20,
+  reviews: 0.20,
+  topics: 0.20,
+  industry: 0.15,
   experience: 0.15,
   format: 0.10,
   audience: 0.10,
-  location: 0.10,
-  language: 0.10,
+  location: 0.05,
+  language: 0.05,
 };
 
 export const INITIAL_GUESTS: GuestProfile[] = [

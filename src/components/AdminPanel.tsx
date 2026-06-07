@@ -48,6 +48,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   
   // Weights validation
   const sumWeights = 
+    (weights.reviews || 0) +
     weights.topics + 
     weights.industry + 
     weights.experience + 
@@ -95,6 +96,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleAutoNormalize = () => {
     const rawSum = sumWeights === 0 ? 1 : sumWeights;
     const normalized: MatchWeights = {
+      reviews: Math.round(((weights.reviews || 0) / rawSum) * 100) / 100,
       topics: Math.round((weights.topics / rawSum) * 100) / 100,
       industry: Math.round((weights.industry / rawSum) * 100) / 100,
       experience: Math.round((weights.experience / rawSum) * 100) / 100,
@@ -943,6 +945,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {/* Slider Elements Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
               {[
+                { key: 'reviews', label: 'Past Rating (w_reviews)', desc: 'Weighted score based on past guest/host reviews.' },
                 { key: 'topics', label: 'Topics Alignment (w_topics)', desc: 'Weighted score based on shared talk categories.' },
                 { key: 'industry', label: 'Industry Alignment (w_industry)', desc: 'Weighted coefficient of matching sectors.' },
                 { key: 'experience', label: 'Experience Match (w_experience)', desc: 'Comparison of speaker skill with show tier.' },

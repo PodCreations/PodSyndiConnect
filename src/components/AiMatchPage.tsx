@@ -641,6 +641,13 @@ export const AiMatchPage: React.FC<AiMatchPageProps> = ({
                             </h5>
                             
                             <div className="space-y-1.5 text-[11px] font-sans">
+                              {/* Row 0: Past Ratings */}
+                              <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150">
+                                <span className="font-semibold text-slate-500">⭐ Past Rating Track Record</span>
+                                <span className="font-mono text-slate-800 font-bold">{(item.trace.reviews.score * 100).toFixed(0)}%</span>
+                              </div>
+                              <p className="text-[9px] text-slate-400 leading-snug pl-1">{item.trace.reviews.detail}</p>
+                              
                               {/* Row 1: Topics */}
                               <div className="flex justify-between items-center bg-white p-1.5 rounded border border-slate-150">
                                 <span className="font-semibold text-slate-500">🔖 Topics Overlap</span>

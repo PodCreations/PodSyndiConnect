@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { User as FirebaseUser } from 'firebase/auth';
+import { initAuth, googleSignIn, getAccessToken } from '../lib/firebase';
 import { GuestProfile, HostProfile } from '../types';
 import defaultHeaderImage from '../assets/images/brand_header_1780775563058.png';
 import { 
@@ -20,7 +22,13 @@ import {
   Mic, 
   ArrowRight, 
   Megaphone,
-  Network
+  Network,
+  ArrowLeft,
+  ListChecks,
+  MessageSquare,
+  UploadIcon,
+  Info,
+  Calendar
 } from 'lucide-react';
 
 interface MemberPortalProps {
@@ -48,6 +56,44 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
 }) => {
   // We'll manage state for user's guest and host setup.
   // We'll tie them to a specific persistent ID: 'my_guest_profile' and 'my_host_profile'
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  const [googleUser, setGoogleUser] = useState<FirebaseUser | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, t) => {
+        setGoogleUser(user);
+        if (t) {
+          setGoogleToken(t);
+        }
+      },
+      () => {
+        setGoogleUser(null);
+        setGoogleToken(null);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleConnect = async () => {
+    setIsLoggingIn(true);
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setGoogleToken(result.accessToken);
+        setGoogleUser(result.user);
+        triggerNotification('Google Calendar connected!');
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+      triggerNotification('Failed to connect Google Calendar');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   const MY_GUEST_ID = 'user_joined_guest';
   const MY_HOST_ID = 'user_joined_host';
 
@@ -58,11 +104,237 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   const [isJoinedGuest, setIsJoinedGuest] = useState(!!existingMyGuest);
   const [isJoinedHost, setIsJoinedHost] = useState(!!existingMyHost);
 
-  // Active sub-tab in portal: guest form or host form
-  const [portalSubTab, setPortalSubTab] = useState<'guest' | 'host'>('guest');
+  // Active sub-tab in portal: guest form or host form or connections
+  const [portalSubTab, setPortalSubTab] = useState<'guest' | 'host' | 'connections'>('connections');
+
 
   // Success indicator message state
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  // Demo Connections State
+  const [connections, setConnections] = useState([
+    {
+      id: 'req_1',
+      fromName: 'Tech Today Media',
+      fromType: 'Host',
+      status: 'Pending',
+      date: 'Today',
+      message: 'Loved your profile! We are looking for an expert on your topics for our next episode block. Let us connect!',
+      workflowState: 0,
+      messages: [] as { sender: 'me' | 'them', text: string, date: string }[],
+      availabilityText: 'Thursdays from 1pm - 5pm EST',
+      bookedTime: null as string | null,
+      recordingUrl: null as string | null,
+      recordingConfirmedByMe: false,
+      recordingConfirmedByThem: false,
+      reviewText: null as string | null,
+      reviewRating: null as number | null
+    },
+    {
+      id: 'req_2',
+      fromName: 'Sarah Jenkins',
+      fromType: 'Guest',
+      status: 'Accepted',
+      date: 'Yesterday',
+      message: 'I would love to be a guest on your podcast. My audience aligns perfectly with your show demographics.',
+      workflowState: 2,
+      messages: [
+        { sender: 'them', text: 'I would love to be a guest on your podcast. My audience aligns perfectly with your show demographics.', date: 'Yesterday' },
+        { sender: 'me', text: 'Sounds great! I just accepted.', date: 'Today' }
+      ],
+      availabilityText: 'Tuesdays and Wednesdays before 12pm PST',
+      bookedTime: null as string | null,
+      recordingConfirmedByMe: false,
+      recordingConfirmedByThem: false,
+      reviewText: null as string | null,
+      reviewRating: null as number | null
+    }
+  ]);
+
+  const [expandedConnectionId, setExpandedConnectionId] = useState<string | null>(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
+  const [recordingLinkInput, setRecordingLinkInput] = useState('');
+  const [reviewInput, setReviewInput] = useState('');
+  const [reviewRatingInput, setReviewRatingInput] = useState(5.0);
+
+  const WORKFLOW_STEPS = [
+    {
+      title: 'Connection Accepted',
+      description: 'Both parties have agreed to connect.',
+      action: 'Say hello in the chat and express your excitement to collaborate! Once introductions are made, advance to the setup phase.'
+    },
+    {
+      title: 'Pre-Interview Setup',
+      description: 'Exchange essential details to ensure a high-quality episode.',
+      action: 'Share your Media Kit, one-sheet, or suggested interview questions in the chat. Validate audio/video tech requirements.'
+    },
+    {
+      title: 'Interview Scheduled',
+      description: 'Lock in a date and time and share the recording link.',
+      action: 'Schedule the interview below. Once scheduled, optionally share the recording or meeting link.'
+    },
+    {
+      title: 'Recording Completed',
+      description: 'Confirm that the interview has concluded successfully.',
+      action: 'Once the interview is over, confirm you finished recording. Waiting for the other party to confirm as well.'
+    },
+    {
+      title: 'Review & Complete',
+      description: 'Leave a review for your collaboration partner.',
+      action: 'Share a testimonial or review to complete this collaboration.'
+    }
+  ];
+
+  const handleConnectionAction = (id: string, action: 'Accepted' | 'Declined') => {
+    setConnections(prev => prev.map(c => {
+      if (c.id === id) {
+        let newMessages = [...c.messages];
+        if (action === 'Accepted') {
+          newMessages = [
+            { sender: 'them', text: c.message, date: c.date },
+            { sender: 'me', text: 'Connection request accepted.', date: 'Just now' }
+          ];
+        }
+        return { ...c, status: action, messages: newMessages };
+      }
+      return c;
+    }));
+    triggerNotification(`Connection request ${action.toLowerCase()}.`);
+    if(action === 'Accepted') {
+      setExpandedConnectionId(id);
+    }
+  };
+
+  const advanceWorkflow = (id: string) => {
+    setConnections(prev => prev.map(c => 
+      c.id === id && c.workflowState < WORKFLOW_STEPS.length - 1 
+        ? { ...c, workflowState: c.workflowState + 1 } 
+        : c
+    ));
+    triggerNotification('Booking workflow advanced!');
+  };
+
+  const sendMessage = (id: string) => {
+    if(!newMessage.trim()) return;
+    setConnections(prev => prev.map(c => 
+      c.id === id 
+        ? { ...c, messages: [...c.messages, { sender: 'me', text: newMessage.trim(), date: 'Just now' }] } 
+        : c
+    ));
+    setNewMessage('');
+    triggerNotification('Message sent!');
+  };
+
+  const bookInterview = async (activeConn: any) => {
+    if(!bookingDate || !bookingTime) {
+      triggerNotification('Please select a date and time.');
+      return;
+    }
+    const bookedString = `${bookingDate} at ${bookingTime}`;
+    // Construct datetime
+    let eventCreated = false;
+
+    if (googleToken && window.confirm('Would you like to add this interview to your Google Calendar?')) {
+      try {
+        const startDateTime = new Date(`${bookingDate} ${bookingTime}`);
+        const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hour later
+        
+        const event = {
+          summary: `Podcast Interview: ${activeConn.fromName}`,
+          description: `Interview scheduled via PodSyndi.\nWith: ${activeConn.fromName}`,
+          start: {
+            dateTime: startDateTime.toISOString(),
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+          end: {
+            dateTime: endDateTime.toISOString(),
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
+        };
+
+        const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${googleToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(event)
+        });
+
+        if (res.ok) {
+          triggerNotification('Added to Google Calendar!');
+          eventCreated = true;
+        } else {
+          console.error("Failed to add to calendar", await res.json());
+          triggerNotification('Failed to add to Google Calendar.');
+        }
+      } catch (err) {
+        console.error(err);
+        triggerNotification('Error connecting to Google Calendar.');
+      }
+    }
+
+    setConnections(prev => prev.map(c => 
+      c.id === activeConn.id 
+        ? { ...c, bookedTime: bookedString, messages: [...c.messages, { sender: 'me', text: `I have scheduled our interview for ${bookedString}. Looking forward to it!`, date: 'Just now' }] } 
+        : c
+    ));
+    setBookingDate('');
+    setBookingTime('');
+    if (!eventCreated) {
+      triggerNotification('Interview successfully booked!');
+    }
+  };
+
+  const saveRecordingLink = (id: string) => {
+    if(!recordingLinkInput.trim()) {
+      triggerNotification('Please enter a recording link.');
+      return;
+    }
+    setConnections(prev => prev.map(c => 
+      c.id === id 
+        ? { ...c, recordingUrl: recordingLinkInput, messages: [...c.messages, { sender: 'me', text: `Here is the meeting/recording link: ${recordingLinkInput}`, date: 'Just now' }] } 
+        : c
+    ));
+    setRecordingLinkInput('');
+    advanceWorkflow(id);
+    triggerNotification('Recording link saved!');
+  };
+
+  const confirmRecording = (activeConn: any) => {
+    setConnections(prev => prev.map(c => 
+      c.id === activeConn.id 
+        ? { ...c, recordingConfirmedByMe: true, messages: [...c.messages, { sender: 'me', text: `I have confirmed that the recording is complete.`, date: 'Just now' }] } 
+        : c
+    ));
+    triggerNotification('Recording confirmed! Waiting for the other party...');
+    
+    // Simulate other party confirming
+    setTimeout(() => {
+      setConnections(prev => prev.map(c => 
+        c.id === activeConn.id 
+          ? { ...c, recordingConfirmedByThem: true, workflowState: c.workflowState + 1, messages: [...c.messages, { sender: 'them', text: `Recording confirmed on my end too!`, date: 'Just now' }] } 
+          : c
+      ));
+      triggerNotification('Recording mutually confirmed!');
+    }, 3000);
+  };
+
+  const submitReview = (id: string) => {
+    if(!reviewInput.trim()) return;
+    setConnections(prev => prev.map(c => 
+      c.id === id 
+        ? { ...c, reviewText: reviewInput, reviewRating: reviewRatingInput, messages: [...c.messages, { sender: 'me', text: `Review submitted: ${reviewRatingInput} stars`, date: 'Just now' }] } 
+        : c
+    ));
+    setReviewInput('');
+    setReviewRatingInput(5.0);
+    advanceWorkflow(id);
+    triggerNotification('Review submitted successfully!');
+  };
+
 
   // Guest State Form
   const [guestForm, setGuestForm] = useState<Partial<GuestProfile>>({
@@ -295,10 +567,10 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
       <div className="border-b border-slate-200 bg-slate-50/50 flex flex-wrap justify-between items-center px-6 py-2 gap-3 shrink-0">
         
         {/* Forms Toggles */}
-        <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold border border-slate-200">
+        <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold border border-slate-200 overflow-x-auto">
           <button
             onClick={() => setPortalSubTab('guest')}
-            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
               portalSubTab === 'guest'
                 ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-black/5 font-extrabold'
                 : 'text-slate-500 hover:text-slate-800'
@@ -310,7 +582,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
           
           <button
             onClick={() => setPortalSubTab('host')}
-            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
               portalSubTab === 'host'
                 ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-black/5 font-extrabold'
                 : 'text-slate-500 hover:text-slate-800'
@@ -319,10 +591,27 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
             <Megaphone className="w-3.5 h-3.5 text-sky-500" />
             My Podcast Host Property
           </button>
+
+          <button
+            onClick={() => setPortalSubTab('connections')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              portalSubTab === 'connections'
+                ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-black/5 font-extrabold'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Network className="w-3.5 h-3.5 text-emerald-500" />
+            My Network Connections
+            {connections.filter(c => c.status === 'Pending').length > 0 && (
+              <span className="bg-red-500 text-white text-[10px] px-1.5 rounded-full px-1.5 py-0.5 ml-1">
+                {connections.filter(c => c.status === 'Pending').length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Quick Simulation Trigger Buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           {portalSubTab === 'guest' ? (
             <button
               onClick={startTestingAsGuest}
@@ -331,7 +620,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               <Eye className="w-3.5 h-3.5" />
               Simulate Matching As Me (Guest)
             </button>
-          ) : (
+          ) : portalSubTab === 'host' ? (
             <button
               onClick={startTestingAsHost}
               className="bg-sky-500 hover:bg-sky-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-all border border-sky-400"
@@ -339,13 +628,441 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               <Eye className="w-3.5 h-3.5" />
               Simulate Matching As Me (Host)
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* PORTAL EDIT MATRIX FORMS */}
       <div className="flex-1 p-6 md:p-8">
-        {portalSubTab === 'guest' ? (
+        {portalSubTab === 'connections' ? (
+          <div className="space-y-6 h-full flex flex-col">
+            {!expandedConnectionId ? (
+              <>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                   <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                     <span className="p-1 px-2.2 text-xs bg-emerald-500/10 text-emerald-700 rounded font-bold font-mono">{connections.length}</span>
+                     Network Connection Requests
+                   </h3>
+                   {googleToken ? (
+                     <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                       <Calendar className="w-3.5 h-3.5" />
+                       Calendar Connected
+                     </div>
+                   ) : (
+                     <button
+                       disabled={isLoggingIn}
+                       onClick={handleGoogleConnect}
+                       className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                     >
+                       <Calendar className="w-3.5 h-3.5" />
+                       Connect Google Calendar
+                     </button>
+                   )}
+                 </div>
+     
+                 {connections.length === 0 ? (
+                   <div className="text-center py-12 text-slate-500 text-sm font-medium">
+                     No connection requests yet. Update your profiles to get matched!
+                   </div>
+                 ) : (
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {connections.map((conn) => (
+                       <div key={conn.id} className="bg-white border text-sm border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3 group relative hover:border-emerald-200 transition-colors">
+                         <div className="flex justify-between items-start">
+                           <div>
+                             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400 block mb-1">
+                               From: {conn.fromType}
+                             </span>
+                             <h4 className="font-bold text-slate-900">{conn.fromName}</h4>
+                             <span className="text-xs text-slate-500">{conn.date}</span>
+                             {(conn.bookedTime || conn.recordingUrl) && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {conn.bookedTime && (
+                                    <div className="flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 font-bold max-w-full">
+                                      <Calendar className="w-3 h-3 shrink-0" /> <span className="truncate">{conn.bookedTime}</span>
+                                    </div>
+                                  )}
+                                  {conn.recordingUrl && (
+                                    <a href={conn.recordingUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 text-[10px] text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors px-1.5 py-0.5 rounded border border-indigo-100 font-bold max-w-full z-10 relative">
+                                      <UploadIcon className="w-3 h-3 shrink-0" /> <span className="truncate">Recording Link</span>
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                           </div>
+                           <div>
+                             <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md ${
+                               conn.status === 'Pending' ? 'bg-amber-100 text-amber-800' : 
+                               conn.status === 'Accepted' ? 'bg-emerald-100 text-emerald-800' : 
+                               'bg-red-100 text-red-800'
+                             }`}>
+                               {conn.status}
+                             </span>
+                           </div>
+                         </div>
+                         
+                         <div className="bg-slate-50 p-3 rounded-lg text-slate-600 text-xs italic border border-slate-100">
+                           "{conn.message}"
+                         </div>
+                         
+                         {conn.status === 'Pending' && (
+                           <div className="flex gap-2 pt-2 border-t border-slate-100">
+                             <button 
+                               onClick={() => handleConnectionAction(conn.id, 'Accepted')}
+                               className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+                             >
+                               <Check className="w-3.5 h-3.5" /> Accept Connection
+                             </button>
+                             <button 
+                               onClick={() => handleConnectionAction(conn.id, 'Declined')}
+                               className="flex-1 bg-white hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                             >
+                               Decline
+                             </button>
+                           </div>
+                         )}
+                         
+                         {conn.status === 'Accepted' && (
+                           <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+                             {conn.bookedTime && (
+                               <div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-100 font-medium">
+                                 <Calendar className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{conn.bookedTime}</span>
+                               </div>
+                             )}
+                             {conn.recordingUrl && (
+                               <a href={conn.recordingUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 text-xs text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors px-2.5 py-1.5 rounded-md border border-indigo-100 font-medium truncate">
+                                 <UploadIcon className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{conn.recordingUrl}</span>
+                               </a>
+                             )}
+                             <button 
+                               onClick={() => setExpandedConnectionId(conn.id)}
+                               className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+                             >
+                               <MessageSquare className="w-3.5 h-3.5" /> Open Booking Workspace
+                             </button>
+                           </div>
+                         )}
+                       </div>
+                     ))}
+                   </div>
+                 )}
+              </>
+            ) : (() => {
+              const activeConn = connections.find(c => c.id === expandedConnectionId);
+              if(!activeConn) return null;
+              return (
+                <div className="flex flex-col h-full gap-4 relative animate-fade-in pb-12 w-full max-w-full">
+                  <div className="flex justify-between items-center bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center gap-4">
+                       <button onClick={() => setExpandedConnectionId(null)} className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer shrink-0">
+                         <ArrowLeft className="w-4 h-4" />
+                       </button>
+                       <div>
+                         <h2 className="text-xl font-display font-black text-slate-900 leading-none mb-1">{activeConn.fromName}</h2>
+                         <span className="text-[10px] uppercase tracking-widest text-emerald-600 font-bold font-mono">Connection Active Workspace</span>
+                       </div>
+                    </div>
+                    <div className="text-right hidden sm:block">
+                      <p className="text-xs text-slate-500 mb-1">Collaborating to produce a great episode together!</p>
+                      <button 
+                         onClick={() => setExpandedConnectionId(null)}
+                         className="text-xs text-slate-400 hover:text-slate-600 font-bold cursor-pointer"
+                      >
+                         &larr; Back to Network
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 items-start">
+                     {/* Left: Workflow Timeline */}
+                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 lg:p-8 relative overflow-hidden">
+                       <div className="absolute top-0 right-0 p-8 w-64 h-64 bg-amber-500/5 blur-3xl rounded-full" />
+                       <div className="relative z-10">
+                         <h3 className="font-bold text-sm text-slate-800 font-mono uppercase tracking-widest flex items-center gap-2 mb-2">
+                           <ListChecks className="w-4 h-4 text-amber-500" /> Booking Workflow
+                         </h3>
+                         <p className="text-xs text-slate-500 mb-8 max-w-sm">
+                           Follow these steps to schedule, record, and publish your feature. Your connection sees this same progress.
+                         </p>
+
+                         <div className="pl-4 space-y-6 relative before:absolute before:inset-y-0 before:left-[35px] before:w-0.5 before:bg-slate-200 py-2">
+                            {WORKFLOW_STEPS.map((step, idx) => {
+                              const isCompleted = idx < activeConn.workflowState;
+                              const isActive = idx === activeConn.workflowState;
+
+                              return (
+                                <div key={idx} className={`relative flex gap-6 ${isCompleted ? 'opacity-60' : isActive ? 'opacity-100' : 'opacity-40'}`}>
+                                  <div className={`w-10 h-10 rounded-full flex flex-col items-center justify-center shrink-0 border-2 relative z-10 bg-white transition-all duration-300 ${
+                                    isCompleted ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' :
+                                    isActive ? 'border-amber-500 ring-4 ring-amber-100 shadow-[0_0_20px_rgba(245,158,11,0.3)]' :
+                                    'border-slate-300'
+                                  }`}>
+                                    {isCompleted ? (
+                                      <Check className="w-5 h-5 text-emerald-500" />
+                                    ) : (
+                                      <span className={`font-mono text-sm font-bold ${isActive ? 'text-amber-600' : 'text-slate-400'}`}>{idx + 1}</span>
+                                    )}
+                                  </div>
+                                  <div className={`flex-1 pt-2 pb-4 ${idx !== WORKFLOW_STEPS.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                                    <h4 className={`text-base font-bold font-display tracking-tight ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{step.title}</h4>
+                                    
+                                    {isActive && (
+                                      <div className="mt-3 bg-amber-50 border border-amber-200/60 p-4 rounded-xl flex flex-col items-start gap-4 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-2 opacity-50"><Info className="w-16 h-16 text-amber-500 blur-xl" /></div>
+                                        <div className="relative z-10 text-left w-full space-y-3">
+                                            <div>
+                                              <p className="text-xs text-amber-900 font-bold mb-1">To Do: {step.description}</p>
+                                              <p className="text-[11px] text-amber-800/80 leading-relaxed max-w-sm">{step.action}</p>
+                                            </div>
+                                            {idx === 2 && (
+                                              <div className="bg-white border border-slate-200 rounded-xl p-4 mt-2 mb-2 w-full">
+                                                {activeConn.bookedTime ? (
+                                                  <div className="flex flex-col gap-4">
+                                                    <div className="flex flex-col gap-2">
+                                                      <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-widest">Interview Booked For</span>
+                                                      <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 font-bold px-3 py-2 rounded-lg border border-emerald-100 text-sm">
+                                                        <Calendar className="w-4 h-4" /> {activeConn.bookedTime}
+                                                      </div>
+                                                    </div>
+                                                    <hr className="border-slate-100" />
+                                                    {activeConn.recordingUrl ? (
+                                                      <div className="flex flex-col gap-2">
+                                                        <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-widest">Recording Link</span>
+                                                        <a href={activeConn.recordingUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-2 rounded-lg border border-indigo-100 text-sm transition-colors cursor-pointer break-all">
+                                                          <UploadIcon className="w-4 h-4 shrink-0" /> {activeConn.recordingUrl}
+                                                        </a>
+                                                      </div>
+                                                    ) : (
+                                                      <div className="flex flex-col gap-3">
+                                                        <span className="text-xs font-bold text-slate-700">Add Recording Link</span>
+                                                        <p className="text-[10px] text-slate-500">
+                                                          Share the raw recording or episode link to complete this step.
+                                                        </p>
+                                                        <div className="flex gap-2">
+                                                          <input 
+                                                            type="url" 
+                                                            placeholder="https://..."
+                                                            value={recordingLinkInput}
+                                                            onChange={(e) => setRecordingLinkInput(e.target.value)}
+                                                            className="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 flex-1 min-w-0"
+                                                          />
+                                                          <button 
+                                                            onClick={() => saveRecordingLink(activeConn.id)}
+                                                            className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 text-xs rounded-lg transition-all shadow-sm shrink-0 cursor-pointer"
+                                                          >
+                                                            Save
+                                                          </button>
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                ) : (
+                                                  <div className="flex flex-col gap-3">
+                                                    <span className="text-xs font-bold text-slate-700">Schedule Interview</span>
+                                                    <p className="text-[10px] text-slate-500">
+                                                      Based on availability: <strong className="text-indigo-600">{activeConn.availabilityText}</strong>
+                                                    </p>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                      <input 
+                                                        type="date" 
+                                                        value={bookingDate}
+                                                        onChange={(e) => setBookingDate(e.target.value)}
+                                                        className="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 w-full"
+                                                      />
+                                                      <select 
+                                                        className="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 w-full"
+                                                        value={bookingTime}
+                                                        onChange={(e) => setBookingTime(e.target.value)}
+                                                      >
+                                                        <option value="">Time</option>
+                                                        <option value="9:00 AM">9:00 AM</option>
+                                                        <option value="10:00 AM">10:00 AM</option>
+                                                        <option value="1:00 PM">1:00 PM</option>
+                                                        <option value="3:30 PM">3:30 PM</option>
+                                                      </select>
+                                                    </div>
+                                                    <button 
+                                                      onClick={() => bookInterview(activeConn)}
+                                                      className="flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 text-xs rounded-lg transition-all shadow-sm w-full cursor-pointer"
+                                                    >
+                                                      <Calendar className="w-3.5 h-3.5" /> Confirm & Book Interview
+                                                    </button>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            )}
+                                            {idx === 3 && (
+                                              <div className="bg-white border border-slate-200 rounded-xl p-4 mt-2 mb-2 w-full">
+                                                <div className="flex flex-col gap-3">
+                                                  {activeConn.recordingConfirmedByMe ? (
+                                                    <div className="flex flex-col gap-2">
+                                                      <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 text-xs font-bold px-3 py-2 rounded-lg border border-emerald-100">
+                                                        <Check className="w-4 h-4" /> You confirmed recording is complete.
+                                                      </div>
+                                                      {activeConn.recordingConfirmedByThem ? (
+                                                        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 text-xs font-bold px-3 py-2 rounded-lg border border-emerald-100">
+                                                          <Check className="w-4 h-4" /> Partner confirmed recording is complete.
+                                                        </div>
+                                                      ) : (
+                                                        <div className="flex items-center gap-2 text-amber-700 bg-amber-50 text-xs font-bold px-3 py-2 rounded-lg border border-amber-100">
+                                                          <span className="animate-pulse">⏳</span> Waiting for partner to confirm...
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  ) : (
+                                                    <>
+                                                      <span className="text-xs font-bold text-slate-700">Confirm Recording</span>
+                                                      <p className="text-[10px] text-slate-500">
+                                                        Click below once the interview is over and you have secured the recording.
+                                                      </p>
+                                                      <button 
+                                                        onClick={() => confirmRecording(activeConn)}
+                                                        className="flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 text-xs rounded-lg transition-all shadow-sm w-full cursor-pointer"
+                                                      >
+                                                        <Check className="w-3.5 h-3.5" /> Confirm Recording Completed
+                                                      </button>
+                                                    </>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            )}
+                                            {idx === 4 && (
+                                              <div className="bg-white border border-slate-200 rounded-xl p-4 mt-2 mb-2 w-full">
+                                                {activeConn.reviewText ? (
+                                                  <div className="flex flex-col gap-2 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                                    <div className="flex items-center justify-between">
+                                                      <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-widest">Your Review</span>
+                                                      {activeConn.reviewRating !== undefined && activeConn.reviewRating !== null && (
+                                                        <div className="flex text-amber-500 text-xs">
+                                                          {'★'.repeat(Math.floor(activeConn.reviewRating))}
+                                                          {activeConn.reviewRating % 1 !== 0 ? '½' : ''}
+                                                          <span className="text-slate-400 ml-1">({activeConn.reviewRating})</span>
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                    <p className="text-xs text-slate-700 italic">"{activeConn.reviewText}"</p>
+                                                  </div>
+                                                ) : (
+                                                  <div className="flex flex-col gap-3">
+                                                    <span className="text-xs font-bold text-slate-700">Leave a Review</span>
+                                                    <p className="text-[10px] text-slate-500">
+                                                      Share your experience working with {activeConn.fromName}.
+                                                    </p>
+                                                    
+                                                    <div className="flex flex-col gap-1.5 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                                      <div className="flex justify-between items-center">
+                                                        <span className="text-xs font-bold text-slate-700">Rating</span>
+                                                        <span className="font-mono text-xs font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded">{reviewRatingInput.toFixed(2)} Stars</span>
+                                                      </div>
+                                                      <input 
+                                                        type="range"
+                                                        min="0" max="5" step="0.25"
+                                                        value={reviewRatingInput}
+                                                        onChange={(e) => setReviewRatingInput(parseFloat(e.target.value))}
+                                                        className="w-full accent-amber-500 mt-1"
+                                                      />
+                                                      <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-bold">
+                                                        <span>0</span>
+                                                        <span>2.5</span>
+                                                        <span>5.0</span>
+                                                      </div>
+                                                    </div>
+
+                                                    <textarea 
+                                                      value={reviewInput}
+                                                      onChange={(e) => setReviewInput(e.target.value)}
+                                                      placeholder="They were a fantastic guest..."
+                                                      className="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 w-full min-h-[60px] resize-none"
+                                                    />
+                                                    <button 
+                                                      onClick={() => submitReview(activeConn.id)}
+                                                      className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 text-xs rounded-lg transition-all shadow-sm w-full cursor-pointer"
+                                                    >
+                                                      <Check className="w-3.5 h-3.5" /> Submit Review
+                                                    </button>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            )}
+                                        </div>
+                                        {idx < 2 && (
+                                          <button 
+                                            onClick={() => advanceWorkflow(activeConn.id)} 
+                                            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 text-xs rounded-lg transition-transform active:scale-95 cursor-pointer shadow-sm relative z-10 flex items-center gap-2"
+                                          >
+                                            Mark Stage Complete <Check className="w-3.5 h-3.5" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                         </div>
+                       </div>
+                     </div>
+
+                     {/* Right: Messaging Widget */}
+                     <div className="bg-slate-50 border border-slate-200 rounded-2xl shadow-inner flex flex-col h-[550px] overflow-hidden lg:sticky lg:top-4">
+                        <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between shadow-sm relative z-10 w-full overflow-hidden">
+                          <div>
+                            <h3 className="font-bold text-xs text-slate-800 font-mono uppercase tracking-widest flex items-center gap-2">
+                              <MessageSquare className="w-4 h-4 text-indigo-500" /> Collaborative Chat
+                            </h3>
+                            <p className="text-[10px] text-slate-500 mt-0.5">Share links, assets, and scheduling info</p>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                          {activeConn.messages.map((msg, i) => (
+                            <div key={i} className={`flex flex-col w-full ${msg.sender === 'me' ? 'items-end text-right' : 'items-start text-left'}`}>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1 px-1">
+                                {msg.sender === 'me' ? 'You' : activeConn.fromName}
+                              </span>
+                              <div className={`text-xs px-4 py-2.5 rounded-2xl break-words break-all max-w-[85%] shadow-sm ${
+                                msg.sender === 'me' 
+                                  ? 'bg-indigo-600 text-white rounded-tr-sm' 
+                                  : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm'
+                              }`}>
+                                {msg.text}
+                              </div>
+                              <span className="text-[9px] text-slate-400 mt-1 px-1 opacity-70">{msg.date}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="p-3 bg-white border-t border-slate-200 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] w-full overflow-hidden">
+                          <div className="flex gap-2 relative bg-slate-100 rounded-full border border-slate-200 p-1">
+                            <input
+                              type="text"
+                              placeholder="Message..."
+                              value={newMessage}
+                              onChange={e => setNewMessage(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    sendMessage(activeConn.id);
+                                }
+                              }}
+                              className="flex-1 bg-transparent px-4 py-2 text-xs font-medium focus:outline-none text-slate-700 min-w-0"
+                            />
+                            <button
+                              onClick={() => sendMessage(activeConn.id)}
+                              disabled={!newMessage.trim()}
+                              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:bg-slate-400 text-white rounded-full p-2 h-9 w-9 flex items-center justify-center shrink-0 transition-colors cursor-pointer shadow-sm"
+                            >
+                              <UploadIcon className="w-4 h-4 rotate-90 ml-1" />
+                            </button>
+                          </div>
+                        </div>
+                     </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        ) : portalSubTab === 'guest' ? (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -583,6 +1300,16 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                   placeholder="e.g. AI, PublicSpeaking, TechEthics"
                   value={guestForm.tags?.join(', ')}
                   onChange={(e) => setGuestForm({ ...guestForm, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">My General Availability</label>
+                <textarea
+                  className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden min-h-[60px]"
+                  placeholder="e.g. Tuesdays & Thursdays after 2pm EST, or share a Calendly link..."
+                  value={guestForm.availability || ''}
+                  onChange={(e) => setGuestForm({ ...guestForm, availability: e.target.value })}
                 />
               </div>
             </div>
@@ -837,6 +1564,16 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                   placeholder="e.g. Technology, Innovators, Science"
                   value={hostForm.tags?.join(', ')}
                   onChange={(e) => setHostForm({ ...hostForm, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Show Booking Availability</label>
+                <textarea
+                  className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden min-h-[60px]"
+                  placeholder="e.g. We record on Mondays 9am-12pm PST. Or drop a Calendly link..."
+                  value={hostForm.availability || ''}
+                  onChange={(e) => setHostForm({ ...hostForm, availability: e.target.value })}
                 />
               </div>
             </div>

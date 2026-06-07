@@ -9,6 +9,7 @@ export function calculateMatchScore(
   weights: MatchWeights
 ): ScoreTrace {
   const sumWeights =
+    (weights.reviews || 0) +
     weights.topics +
     weights.industry +
     weights.experience +
@@ -22,6 +23,7 @@ export function calculateMatchScore(
 
   if (!isValid) {
     return {
+      reviews: { score: 0, maxWeight: weights.reviews || 0, weighted: 0, detail: 'Weights do not sum to 1.00' },
       topics: { score: 0, maxWeight: weights.topics, weighted: 0, detail: 'Weights do not sum to 1.00' },
       industry: { score: 0, maxWeight: weights.industry, weighted: 0, detail: 'Weights do not sum to 1.00' },
       experience: { score: 0, maxWeight: weights.experience, weighted: 0, detail: 'Weights do not sum to 1.00' },
@@ -172,7 +174,26 @@ export function calculateMatchScore(
     languageDetail = `Language barrier. Guest speaks [${guest.languages.join(', ')}], Host requires [${host.languages.join(', ')}]`;
   }
 
+  // 8. Reviews / Past Performance
+  let reviewsScore = 0.5; // neutral base
+  let reviewsDetail = 'No previous reviews. Neutral baseline applied.';
+  const guestRating = guest.reviewRating;
+  const hostRating = host.reviewRating;
+  
+  if (guestRating !== undefined && hostRating !== undefined) {
+    const avgRating = (guestRating + hostRating) / 2;
+    reviewsScore = Math.max(0, avgRating / 5.0);
+    reviewsDetail = `Mutual past reviews combined: ${avgRating.toFixed(2)} / 5.0`;
+  } else if (guestRating !== undefined) {
+    reviewsScore = Math.max(0, guestRating / 5.0);
+    reviewsDetail = `Evaluating Guest past review score: ${guestRating.toFixed(2)} / 5.0`;
+  } else if (hostRating !== undefined) {
+    reviewsScore = Math.max(0, hostRating / 5.0);
+    reviewsDetail = `Evaluating Host past review score: ${hostRating.toFixed(2)} / 5.0`;
+  }
+
   // Compute composite score S = sum(w * T)
+  const weightedReviews = reviewsScore * (weights.reviews || 0);
   const weightedTopics = topicsScore * weights.topics;
   const weightedIndustry = industryScore * weights.industry;
   const weightedExperience = experienceScore * weights.experience;
@@ -182,6 +203,7 @@ export function calculateMatchScore(
   const weightedLanguage = languageScore * weights.language;
 
   const rawComposite =
+    weightedReviews +
     weightedTopics +
     weightedIndustry +
     weightedExperience +
@@ -193,6 +215,7 @@ export function calculateMatchScore(
   const compositeScore = Math.round(rawComposite * 100);
 
   return {
+    reviews: { score: reviewsScore, maxWeight: weights.reviews || 0, weighted: weightedReviews, detail: reviewsDetail },
     topics: { score: topicsScore, maxWeight: weights.topics, weighted: weightedTopics, detail: topicsDetail },
     industry: { score: industryScore, maxWeight: weights.industry, weighted: weightedIndustry, detail: industryDetail },
     experience: { score: experienceScore, maxWeight: weights.experience, weighted: weightedExperience, detail: experienceDetail },
@@ -524,6 +547,7 @@ class PodSyndiConnect_Plugin {
      */
     public function compute_compatibility_score( $guest_id, $host_id ) {
         // Constant dimensions and weights
+        $w_reviews = ${weights.reviews || 0};
         $w_topics = ${weights.topics};
         $w_industry = ${weights.industry};
         $w_experience = ${weights.experience};
@@ -533,7 +557,7 @@ class PodSyndiConnect_Plugin {
         $w_language = ${weights.language};
 
         // Assert weights sum to 1.00 roughly
-        $w_sum = $w_topics + $w_industry + $w_experience + $w_format + $w_audience + $w_location + $w_language;
+        $w_sum = $w_reviews + $w_topics + $w_industry + $w_experience + $w_format + $w_audience + $w_location + $w_language;
         if ( abs( $w_sum - 1.0 ) > 0.01 ) {
             return array('score' => 0, 'valid' => false, 'reason' => 'Admin mismatch configured weights');
         }
@@ -621,8 +645,22 @@ class PodSyndiConnect_Plugin {
             $language_score = 0.55;
         }
 
+        // 8. Reviews Score
+        $g_review = get_field('review_rating', $guest_id);
+        $h_review = get_field('review_rating', $host_id);
+        
+        $reviews_score = 0.5;
+        if ($g_review !== false && $h_review !== false) {
+            $reviews_score = max(0, (($g_review + $h_review) / 2) / 5.0);
+        } elseif ($g_review !== false) {
+            $reviews_score = max(0, $g_review / 5.0);
+        } elseif ($h_review !== false) {
+            $reviews_score = max(0, $h_review / 5.0);
+        }
+
         // Weighted final score
         $raw_score = 
+            ($w_reviews * $reviews_score) +
             ($w_topics * $topics_score) +
             ($w_industry * $industry_score) +
             ($w_experience * $experience_score) +

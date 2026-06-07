@@ -14,6 +14,8 @@ export interface GuestProfile {
   avatarUrl?: string;
   headerBgUrl?: string;
   emailContact?: string;
+  availability?: string;
+  reviewRating?: number;
 }
 
 export interface HostProfile {
@@ -33,9 +35,12 @@ export interface HostProfile {
   logoUrl?: string;
   headerBgUrl?: string;
   hostEmail?: string;
+  availability?: string;
+  reviewRating?: number;
 }
 
 export interface MatchWeights {
+  reviews: number;
   topics: number;
   industry: number;
   experience: number;
@@ -46,6 +51,7 @@ export interface MatchWeights {
 }
 
 export interface ScoreTrace {
+  reviews: { score: number; maxWeight: number; weighted: number; detail: string };
   topics: { score: number; maxWeight: number; weighted: number; detail: string };
   industry: { score: number; maxWeight: number; weighted: number; detail: string };
   experience: { score: number; maxWeight: number; weighted: number; detail: string };
@@ -56,3 +62,4 @@ export interface ScoreTrace {
   compositeScore: number;
   isValid: boolean;
 }
+
