@@ -28,6 +28,9 @@ export const INITIAL_GUESTS: GuestProfile[] = [
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face',
     emailContact: 'evelyn.m@techresearch.org',
     reviewRating: 4.8,
+    points: 850,
+    level: 4,
+    badges: ['Top Rated', 'Highly Recommended', 'Consistent Contributor'],
     reviews: [
       {
         id: 'rev_1',
@@ -75,7 +78,10 @@ export const INITIAL_GUESTS: GuestProfile[] = [
     preferredFormats: ['Interview', 'Solo/Co-host'],
     tags: ['SaaS', 'Marketing', 'StartupFunding', 'GrowthHacking'],
     avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face',
-    emailContact: 'sullivan.growth@mms.com'
+    emailContact: 'sullivan.growth@mms.com',
+    points: 320,
+    level: 3,
+    badges: ['Rising Star', 'Community Favorite']
   },
   {
     id: 'guest_3',
@@ -91,7 +97,10 @@ export const INITIAL_GUESTS: GuestProfile[] = [
     preferredFormats: ['Interview', 'Panel/Roundtable', 'Solo/Co-host'],
     tags: ['Wellness', 'Biohacking', 'Vegan', 'MentalHealth'],
     avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face',
-    emailContact: 'sid.mehta@holisticbound.co.uk'
+    emailContact: 'sid.mehta@holisticbound.co.uk',
+    points: 120,
+    level: 2,
+    badges: ['New Talent']
   },
   {
     id: 'guest_4',
@@ -107,7 +116,10 @@ export const INITIAL_GUESTS: GuestProfile[] = [
     preferredFormats: ['Panel/Roundtable'],
     tags: ['Gamedev', 'RetroArt', 'CreativeCoding', 'Python'],
     avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-    emailContact: 'chloe@pixelsandcode.fr'
+    emailContact: 'chloe@pixelsandcode.fr',
+    points: 1500,
+    level: 5,
+    badges: ['Top Rated', 'Community Favorite', 'Consistent Contributor']
   },
   {
     id: 'guest_5',
@@ -123,7 +135,10 @@ export const INITIAL_GUESTS: GuestProfile[] = [
     preferredFormats: ['Interview', 'Solo/Co-host'],
     tags: ['Stocks', 'Investing', 'FinancialLiteracy', 'GenZ'],
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
-    emailContact: 'jackson.aaliyah@investinghub.com'
+    emailContact: 'jackson.aaliyah@investinghub.com',
+    points: 40,
+    level: 1,
+    badges: ['New Talent']
   }
 ];
 
@@ -145,6 +160,9 @@ export const INITIAL_HOSTS: HostProfile[] = [
     logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&h=150&fit=crop',
     hostEmail: 'booking@aihorizon.io',
     reviewRating: 4.5,
+    points: 700,
+    level: 4,
+    badges: ['Top Rated', 'Highly Recommended'],
     reviews: [
       {
         id: 'rev_2',
@@ -193,7 +211,10 @@ export const INITIAL_HOSTS: HostProfile[] = [
     requiredExperienceLevel: 'Intermediate',
     tags: ['SaaS', 'IndieHackers', 'Startup'],
     logoUrl: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=150&h=150&fit=crop',
-    hostEmail: 'sully@bootstrappedfounders.com'
+    hostEmail: 'sully@bootstrappedfounders.com',
+    points: 250,
+    level: 3,
+    badges: ['Rising Star']
   },
   {
     id: 'host_3',
@@ -210,7 +231,10 @@ export const INITIAL_HOSTS: HostProfile[] = [
     requiredExperienceLevel: 'Intermediate',
     tags: ['Wellness', 'Biohacking', 'Productivity'],
     logoUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=150&h=150&fit=crop',
-    hostEmail: 'producers@wellnesseng.co.uk'
+    hostEmail: 'producers@wellnesseng.co.uk',
+    points: 800,
+    level: 4,
+    badges: ['Consistent Contributor']
   },
   {
     id: 'host_4',
@@ -227,7 +251,10 @@ export const INITIAL_HOSTS: HostProfile[] = [
     requiredExperienceLevel: 'Beginner',
     tags: ['Gaming', 'Creative', 'France', 'Art'],
     logoUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=150&h=150&fit=crop',
-    hostEmail: 'interviews@lepixelclub.fr'
+    hostEmail: 'interviews@lepixelclub.fr',
+    points: 110,
+    level: 2,
+    badges: ['New Talent', 'Community Favorite']
   }
 ];
 

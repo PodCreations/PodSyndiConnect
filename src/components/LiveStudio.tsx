@@ -40,7 +40,10 @@ import {
   FileText,
   Upload,
   Star,
-  StarHalf
+  StarHalf,
+  Heart,
+  ThumbsUp,
+  Activity
 } from 'lucide-react';
 
 interface LiveStudioProps {
@@ -538,6 +541,89 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                   </div>
                 </div>
 
+                {/* GAMIFICATION STATS */}
+                <div className="space-y-4 relative">
+                  <span className="absolute -top-3.5 right-6 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.2 font-mono text-[7px] text-[#D4AF37]">
+                    [acf: gamification_stats]
+                  </span>
+                  <h2 className="font-display font-black text-xl uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-[#D4AF37] fill-current" />
+                    Guest Achievements
+                  </h2>
+                  
+                  <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-3xs flex flex-col md:flex-row gap-8 items-stretch">
+                    {/* Level & Points Gauge */}
+                    <div className="flex-[0.5] flex flex-col items-center justify-center bg-slate-50 rounded-xl p-5 border border-slate-100">
+                      <div className="relative flex items-center justify-center w-24 h-24 mb-3">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                          {/* Background Circle */}
+                          <path
+                            className="text-slate-200"
+                            strokeWidth="3"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                          {/* Progress Circle (dynamic based on points) */}
+                          <path
+                            className="text-[#D4AF37]"
+                            strokeWidth="3"
+                            strokeDasharray={`${Math.min(100, Math.max(0, (((previewProfile as GuestProfile).points || 0) % 500) / 500 * 100))}, 100`}
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-2xl font-black text-slate-800 leading-none">{(previewProfile as GuestProfile).level || 1}</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Level</span>
+                        </div>
+                      </div>
+                      <div className="text-center space-y-0.5">
+                        <div className="text-xl font-black text-slate-800 font-mono">{(previewProfile as GuestProfile).points || 0}</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Points</div>
+                      </div>
+                    </div>
+
+                    {/* Badges List */}
+                    <div className="flex-1 flex flex-col justify-center space-y-4">
+                      <div>
+                        <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-3">Earned Badges</h3>
+                        {((previewProfile as GuestProfile).badges && (previewProfile as GuestProfile).badges!.length > 0) ? (
+                          <div className="flex flex-wrap gap-2.5">
+                            {(previewProfile as GuestProfile).badges!.map(badge => (
+                              <div key={badge} className="flex items-center gap-2 bg-amber-50 border border-amber-200/60 rounded-xl px-3 py-2 shadow-sm">
+                                {badge === 'Top Rated' && <Star className="w-4 h-4 text-amber-500 fill-current" />}
+                                {badge === 'Rising Star' && <Flame className="w-4 h-4 text-orange-500 fill-current" />}
+                                {badge === 'Community Favorite' && <Heart className="w-4 h-4 text-pink-500 fill-current" />}
+                                {badge === 'Highly Recommended' && <ThumbsUp className="w-4 h-4 text-blue-500 fill-current" />}
+                                {badge === 'New Talent' && <Sparkles className="w-4 h-4 text-purple-500 fill-current" />}
+                                {badge === 'Consistent Contributor' && <Activity className="w-4 h-4 text-emerald-500 fill-current" />}
+                                <span className="text-xs font-bold text-slate-800">{badge}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500 italic font-medium">New member earning their first badges.</p>
+                        )}
+                      </div>
+                      
+                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-500">Next milestone at {(()=>{
+                          const p = (previewProfile as GuestProfile).points || 0;
+                          if (p < 100) return 100;
+                          if (p < 250) return 250;
+                          if (p < 500) return 500;
+                          if (p < 1000) return 1000;
+                          return 'Max Level';
+                        })()} pts</span>
+                        <a href="#stats" onClick={e=>e.preventDefault()} className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider hover:underline">View How to Earn &rsaquo;</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 5. TOPICS THEY CAN SPEAK ABOUT */}
                 <div className="space-y-4 relative">
                   <span className="absolute -top-3.5 right-6 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.2 font-mono text-[7px] text-[#D4AF37]">
@@ -1006,6 +1092,89 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                   </h2>
                   <div className="bg-white p-6 rounded-2xl border border-slate-100 text-[#444444] text-base leading-relaxed font-sans shadow-3xs hover:border-slate-200 transition-all select-text">
                     {(previewProfile as HostProfile).description}
+                  </div>
+                </div>
+
+                {/* GAMIFICATION STATS */}
+                <div className="space-y-4 relative">
+                  <span className="absolute -top-3.5 right-6 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.2 font-mono text-[7px] text-sky-500">
+                    [acf: gamification_stats]
+                  </span>
+                  <h2 className="font-display font-black text-xl uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-sky-500 fill-current" />
+                    Host Achievements
+                  </h2>
+                  
+                  <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-3xs flex flex-col md:flex-row gap-8 items-stretch">
+                    {/* Level & Points Gauge */}
+                    <div className="flex-[0.5] flex flex-col items-center justify-center bg-slate-50 rounded-xl p-5 border border-slate-100">
+                      <div className="relative flex items-center justify-center w-24 h-24 mb-3">
+                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                          {/* Background Circle */}
+                          <path
+                            className="text-slate-200"
+                            strokeWidth="3"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                          {/* Progress Circle (dynamic based on points) */}
+                          <path
+                            className="text-sky-500"
+                            strokeWidth="3"
+                            strokeDasharray={`${Math.min(100, Math.max(0, (((previewProfile as HostProfile).points || 0) % 500) / 500 * 100))}, 100`}
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-2xl font-black text-slate-800 leading-none">{(previewProfile as HostProfile).level || 1}</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Level</span>
+                        </div>
+                      </div>
+                      <div className="text-center space-y-0.5">
+                        <div className="text-xl font-black text-slate-800 font-mono">{(previewProfile as HostProfile).points || 0}</div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Points</div>
+                      </div>
+                    </div>
+
+                    {/* Badges List */}
+                    <div className="flex-1 flex flex-col justify-center space-y-4">
+                      <div>
+                        <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-3">Earned Badges</h3>
+                        {((previewProfile as HostProfile).badges && (previewProfile as HostProfile).badges!.length > 0) ? (
+                          <div className="flex flex-wrap gap-2.5">
+                            {(previewProfile as HostProfile).badges!.map(badge => (
+                              <div key={badge} className="flex items-center gap-2 bg-sky-50 border border-sky-200/60 rounded-xl px-3 py-2 shadow-sm">
+                                {badge === 'Top Rated' && <Star className="w-4 h-4 text-sky-500 fill-current" />}
+                                {badge === 'Rising Star' && <Flame className="w-4 h-4 text-orange-500 fill-current" />}
+                                {badge === 'Community Favorite' && <Heart className="w-4 h-4 text-pink-500 fill-current" />}
+                                {badge === 'Highly Recommended' && <ThumbsUp className="w-4 h-4 text-blue-500 fill-current" />}
+                                {badge === 'New Talent' && <Sparkles className="w-4 h-4 text-purple-500 fill-current" />}
+                                {badge === 'Consistent Contributor' && <Activity className="w-4 h-4 text-emerald-500 fill-current" />}
+                                <span className="text-xs font-bold text-slate-800">{badge}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500 italic font-medium">New show earning their first badges.</p>
+                        )}
+                      </div>
+                      
+                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-500">Next milestone at {(()=>{
+                          const p = (previewProfile as HostProfile).points || 0;
+                          if (p < 100) return 100;
+                          if (p < 250) return 250;
+                          if (p < 500) return 500;
+                          if (p < 1000) return 1000;
+                          return 'Max Level';
+                        })()} pts</span>
+                        <a href="#stats" onClick={e=>e.preventDefault()} className="text-[10px] font-bold text-sky-500 uppercase tracking-wider hover:underline">View How to Earn &rsaquo;</a>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

@@ -96,7 +96,7 @@ export const AiMatchPage: React.FC<AiMatchPageProps> = ({
         experienceLevel: exp,
         location: loc,
         remotePreference: idx % 3 === 0 ? 'Remote Only' : idx % 3 === 1 ? 'In-Person Only' : 'Hybrid',
-        languages: ['English', idx % 4 === 0 ? 'Spanish' : 'English'],
+        languages: idx % 4 === 0 ? ['English', 'Spanish'] : ['English'],
         audiencePreference: aud,
         preferredFormats: [formats[idx % formats.length], formats[(idx + 1) % formats.length]],
         tags: [ind.replace(/ & /g, '').replace(/\//g, ''), 'Speaker', 'Co-Host'],
@@ -117,10 +117,11 @@ export const AiMatchPage: React.FC<AiMatchPageProps> = ({
       const loc = locations[(idx * 2) % locations.length];
       const exp = experienceLevels[(idx * 6) % experienceLevels.length];
 
+      const baseIdx = idx % topicsPool.length;
       const ts = [
-        topicsPool[idx % topicsPool.length],
-        topicsPool[(idx * 2 + 1) % topicsPool.length],
-        topicsPool[(idx * 3 + 2) % topicsPool.length]
+        topicsPool[baseIdx],
+        topicsPool[(baseIdx + 7) % topicsPool.length],
+        topicsPool[(baseIdx + 13) % topicsPool.length]
       ];
 
       hPool.push({
@@ -133,7 +134,7 @@ export const AiMatchPage: React.FC<AiMatchPageProps> = ({
         audienceSize: aud,
         location: loc,
         remoteOptions: idx % 3 === 0 ? 'Remote Only' : idx % 3 === 1 ? 'In-Person Only' : 'Hybrid',
-        languages: ['English', idx % 5 === 0 ? 'Spanish' : 'English'],
+        languages: idx % 5 === 0 ? ['English', 'Spanish'] : ['English'],
         guestRequirements: `Must enjoy deep, unscripted discussions and show a strong command of ${ts[0]}.`,
         requiredExperienceLevel: exp,
         tags: [ind.replace(/ & /g, '').replace(/\//g, ''), 'Broadcast', 'Syndication'],
@@ -596,8 +597,8 @@ export const AiMatchPage: React.FC<AiMatchPageProps> = ({
 
                     {/* Meta tag bubbles */}
                     <div className="flex flex-wrap gap-1.5">
-                      {topicsShow.map(t => (
-                        <span key={t} className="text-[9px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                      {topicsShow.map((t, idx) => (
+                        <span key={`${t}-${idx}`} className="text-[9px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
                           {t}
                         </span>
                       ))}

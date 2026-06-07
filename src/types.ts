@@ -28,6 +28,9 @@ export interface GuestProfile {
   availability?: string;
   reviewRating?: number;
   reviews?: ProfileReview[];
+  points?: number;
+  level?: number;
+  badges?: string[];
 }
 
 export interface HostProfile {
@@ -50,6 +53,9 @@ export interface HostProfile {
   availability?: string;
   reviewRating?: number;
   reviews?: ProfileReview[];
+  points?: number;
+  level?: number;
+  badges?: string[];
 }
 
 export interface MatchWeights {

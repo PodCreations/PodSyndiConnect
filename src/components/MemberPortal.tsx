@@ -28,7 +28,15 @@ import {
   MessageSquare,
   UploadIcon,
   Info,
-  Calendar
+  Calendar,
+  Heart,
+  Star,
+  Award,
+  Zap,
+  Flame,
+  ThumbsUp,
+  Activity,
+  Radio
 } from 'lucide-react';
 
 interface MemberPortalProps {
@@ -107,7 +115,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   const [isJoinedHost, setIsJoinedHost] = useState(!!existingMyHost);
 
   // Active sub-tab in portal: guest form or host form or connections
-  const [portalSubTab, setPortalSubTab] = useState<'guest' | 'host' | 'connections'>('connections');
+  const [portalSubTab, setPortalSubTab] = useState<'dashboard' | 'guest' | 'host' | 'connections'>('dashboard');
 
 
   // Success indicator message state
@@ -631,6 +639,18 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
         {/* Forms Toggles */}
         <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold border border-slate-200 overflow-x-auto">
           <button
+            onClick={() => setPortalSubTab('dashboard')}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              portalSubTab === 'dashboard'
+                ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-black/5 font-extrabold'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            My Dashboard
+          </button>
+          
+          <button
             onClick={() => setPortalSubTab('guest')}
             className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
               portalSubTab === 'guest'
@@ -696,7 +716,113 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
 
       {/* PORTAL EDIT MATRIX FORMS */}
       <div className="flex-1 p-6 md:p-8">
-        {portalSubTab === 'connections' ? (
+        {portalSubTab === 'dashboard' ? (
+          <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+            <h3 className="font-display font-black text-2xl text-slate-800 flex items-center gap-2 mb-8 border-b border-slate-100 pb-4">
+              <Zap className="w-6 h-6 text-amber-500 fill-current" />
+              Gamification Dashboard
+            </h3>
+
+            {/* Overall Progress Wrapper */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Profile Card Summary */}
+              <div className="bg-white border text-center border-slate-200 rounded-2xl shadow-3xs p-6 flex flex-col items-center justify-between">
+                <div className="w-24 h-24 bg-gradient-to-tr from-amber-400 to-amber-200 rounded-full flex items-center justify-center shadow-lg relative mb-4">
+                  <Star className="w-10 h-10 text-white fill-current" />
+                  <div className="absolute -bottom-2 -right-2 bg-slate-900 text-white font-mono font-black text-xs px-2 py-0.5 rounded shadow">
+                    Lvl 2
+                  </div>
+                </div>
+                <h4 className="font-bold text-slate-800 text-lg">Your Profile Rank</h4>
+                <p className="text-slate-500 text-sm mt-1">Consistency pays off. Complete your profile & connections to rank up.</p>
+                <div className="w-full mt-4 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="bg-[#D4AF37] h-2.5 rounded-full" style={{ width: '45%' }}></div>
+                </div>
+                <div className="w-full flex justify-between text-[11px] font-bold text-slate-400 uppercase mt-2">
+                  <span>120 PTS</span>
+                  <span>NEXT: 250 PTS</span>
+                </div>
+              </div>
+
+              {/* Badges Collection */}
+              <div className="bg-amber-50/50 border border-amber-200/50 rounded-2xl shadow-3xs p-6 flex flex-col items-start justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                  <Star className="w-48 h-48" />
+                </div>
+                <h4 className="font-extrabold text-amber-900 text-md uppercase tracking-wider mb-2">My Unlocked Badges</h4>
+                <div className="flex flex-wrap gap-2.5 z-10 w-full mb-4">
+                  <div className="flex items-center gap-2 bg-white border border-amber-200 text-amber-800 rounded-xl px-3 py-2 shadow-sm font-bold text-xs"><Sparkles className="w-4 h-4 text-amber-500 fill-current" /> New Talent</div>
+                  <div className="flex items-center gap-2 bg-slate-100/50 border border-slate-200 border-dashed text-slate-400 rounded-xl px-3 py-2 font-bold text-xs"><Heart className="w-4 h-4 text-slate-300" /> Community Fav (Locked)</div>
+                  <div className="flex items-center gap-2 bg-slate-100/50 border border-slate-200 border-dashed text-slate-400 rounded-xl px-3 py-2 font-bold text-xs"><Award className="w-4 h-4 text-slate-300" /> Top Rated (Locked)</div>
+                </div>
+                <button className="text-xs font-bold text-amber-600 bg-amber-100 hover:bg-amber-200 px-4 py-2 rounded-lg transition-colors w-full z-10">
+                  View Badge Requirements
+                </button>
+              </div>
+
+            </div>
+
+            {/* Action Checklist */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-3xs overflow-hidden mt-6">
+              <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-xs">Suggested Actions to Earn More</h4>
+                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded">Action-based rewards</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                <div className="p-4 px-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                      <UserCheck className="w-4 h-4 stroke-2" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">Complete Profile 100%</p>
+                      <p className="text-xs text-slate-500">Add an avatar, bio, and all contact details.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-emerald-600 font-mono">+50 pts</span>
+                    <button onClick={()=>setPortalSubTab('guest')} className="text-xs font-bold bg-slate-900 text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors">Go</button>
+                  </div>
+                </div>
+
+                <div className="p-4 px-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                      <MessageSquare className="w-4 h-4 stroke-2" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">Leave a Review</p>
+                      <p className="text-xs text-slate-500">Provide feedback after your first connection.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-emerald-600 font-mono">+100 pts</span>
+                    <button onClick={()=>setPortalSubTab('connections')} className="text-xs font-bold bg-slate-900 text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors">Go</button>
+                  </div>
+                </div>
+
+                <div className="p-4 px-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                      <Radio className="w-4 h-4 stroke-2" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">Complete Interview</p>
+                      <p className="text-xs text-slate-500">Confirm an episode was successfully recorded.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-emerald-600 font-mono">+250 pts</span>
+                    <button onClick={()=>setPortalSubTab('connections')} className="text-xs font-bold bg-slate-900 text-white px-3 py-1.5 rounded-md hover:bg-slate-800 transition-colors">Go</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        ) : portalSubTab === 'connections' ? (
           <div className="space-y-6 h-full flex flex-col">
             {!expandedConnectionId ? (
               <>
