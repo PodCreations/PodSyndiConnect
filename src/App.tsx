@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { GuestProfile, HostProfile, MatchWeights } from './types';
 import { INITIAL_GUESTS, INITIAL_HOSTS, DEFAULT_WEIGHTS } from './data';
 import { AdminPanel } from './components/AdminPanel';
+import { HomePage } from './components/HomePage';
 import { LiveStudio } from './components/LiveStudio';
 import { CodeGeneratorTab } from './components/CodeGeneratorTab';
 import { MemberPortal } from './components/MemberPortal';
@@ -73,7 +74,7 @@ export default function App() {
   });
 
   // Simulator navigation tab state
-  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'studio' | 'database' | 'code' | 'portal' | 'aimatch'>('portal');
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'home' | 'studio' | 'database' | 'code' | 'portal' | 'aimatch'>('home');
 
   // Hoisted state for Live Viewer context modeling
   const [viewerType, setViewerType] = useState<'anonymous' | 'guest' | 'host'>('host');
@@ -121,6 +122,16 @@ export default function App() {
 
         {/* Dynamic header navigation synced to tabs */}
         <nav className="hidden md:flex gap-6 text-sm font-semibold">
+          <button 
+            onClick={() => setActiveWorkspaceTab('home')}
+            className={`transition-colors cursor-pointer py-1 border-b-2 font-semibold flex items-center gap-1 ${
+              activeWorkspaceTab === 'home' 
+                ? 'text-amber-400 border-amber-400 font-extrabold' 
+                : 'text-slate-300 hover:text-amber-200 border-transparent'
+            }`}
+          >
+            Home
+          </button>
           <button 
             onClick={() => setActiveWorkspaceTab('portal')}
             className={`transition-colors cursor-pointer py-1 border-b-2 font-semibold flex items-center gap-1 ${
@@ -215,7 +226,17 @@ export default function App() {
           
           {/* Section 0: User Session / My Portal */}
           <div className="p-4 border-b border-slate-150 bg-slate-50/60 space-y-2">
-            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+            <button
+              onClick={() => setActiveWorkspaceTab('home')}
+              className={`w-full flex items-center justify-start text-xs p-2.5 rounded-xl font-bold transition-all cursor-pointer ${
+                activeWorkspaceTab === 'home'
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'text-slate-700 hover:bg-slate-100 border border-transparent'
+              }`}
+            >
+              Home Directory
+            </button>
+            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest pt-2">
               My Profile Center
             </p>
             <button
@@ -396,6 +417,16 @@ export default function App() {
           {/* MOBILE TAB WORKSPACE SELECTOR BAR */}
           <div className="flex md:hidden bg-white p-1 rounded-xl border border-slate-200 text-[10px] font-bold shrink-0 shadow-xs gap-1 select-none overflow-x-auto">
             <button
+              onClick={() => setActiveWorkspaceTab('home')}
+              className={`px-2.5 py-1.5 rounded-lg transition-all text-center cursor-pointer shrink-0 ${
+                activeWorkspaceTab === 'home'
+                  ? 'bg-slate-900 text-white'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              Home
+            </button>
+            <button
               onClick={() => setActiveWorkspaceTab('portal')}
               className={`px-2.5 py-1.5 rounded-lg transition-all text-center cursor-pointer shrink-0 ${
                 activeWorkspaceTab === 'portal'
@@ -449,6 +480,16 @@ export default function App() {
 
           {/* DYNAMIC SCREEN LAYOUT INSERTS */}
           <div className="flex-1 min-h-0 font-sans">
+            {activeWorkspaceTab === 'home' && (
+              <HomePage
+                guests={guests}
+                hosts={hosts}
+                setActiveWorkspaceTab={setActiveWorkspaceTab}
+                onSelectPreview={handleSelectPreview}
+                viewerType={viewerType}
+              />
+            )}
+
             {activeWorkspaceTab === 'portal' && (
               <MemberPortal
                 guests={guests}
