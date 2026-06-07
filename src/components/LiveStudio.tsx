@@ -78,6 +78,7 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [playbackTime, setPlaybackTime] = React.useState(8);
   const [showReviewsModal, setShowReviewsModal] = React.useState(false);
+  const [showBadgeInfoModal, setShowBadgeInfoModal] = React.useState(false);
   const [activeAction, setActiveAction] = React.useState<'book' | 'apply' | null>(null);
   const [formSubmitted, setFormSubmitted] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState('2026-06-15');
@@ -618,7 +619,7 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                           if (p < 1000) return 1000;
                           return 'Max Level';
                         })()} pts</span>
-                        <a href="#stats" onClick={e=>e.preventDefault()} className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider hover:underline">View How to Earn &rsaquo;</a>
+                        <button onClick={(e)=>{e.preventDefault(); setShowBadgeInfoModal(true);}} className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider hover:underline cursor-pointer">View How to Earn &rsaquo;</button>
                       </div>
                     </div>
                   </div>
@@ -853,7 +854,14 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                           
                           {/* Calendar Picker Simulation */}
                           <div className="space-y-1.5">
-                            <label className="font-bold text-slate-700 block">Simulated WP Calendar Date:</label>
+                            <label className="font-bold text-slate-700 flex items-center gap-1.5 group relative w-max">
+                              <span>Simulated WP Calendar Date:</span>
+                              <Info className="w-3.5 h-3.5 opacity-50 text-slate-500 cursor-pointer" />
+                              <div className="absolute left-0 bottom-full mb-2 w-56 bg-slate-800 text-slate-200 text-xs p-3 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 font-normal shadow-xl pointer-events-none">
+                                Select a date for the interview.
+                                <div className="absolute left-6 top-full w-2.5 h-2.5 bg-slate-800 transform rotate-45 -mt-[5px]"></div>
+                              </div>
+                            </label>
                             <div className="grid grid-cols-4 gap-2 text-center text-[11px]">
                               {['2026-06-15', '2026-06-16', '2026-06-17', '2026-06-18'].map((date) => (
                                 <button 
@@ -873,7 +881,14 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
 
                           {/* Time Slots */}
                           <div className="space-y-1.5">
-                            <label className="font-bold text-slate-700 block">Available Segment Slots:</label>
+                            <label className="font-bold text-slate-700 flex items-center gap-1.5 group relative w-max">
+                              <span>Available Segment Slots:</span>
+                              <Info className="w-3.5 h-3.5 opacity-50 text-slate-500 cursor-pointer" />
+                              <div className="absolute left-0 bottom-full mb-2 w-56 bg-slate-800 text-slate-200 text-xs p-3 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 font-normal shadow-xl pointer-events-none">
+                                Choose a time block to schedule your segment.
+                                <div className="absolute left-6 top-full w-2.5 h-2.5 bg-slate-800 transform rotate-45 -mt-[5px]"></div>
+                              </div>
+                            </label>
                             <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
                               {['10:00 AM EST', '02:00 PM EST', '04:30 PM EST', '09:00 PM EST'].map((slot) => (
                                 <button 
@@ -1172,7 +1187,7 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                           if (p < 1000) return 1000;
                           return 'Max Level';
                         })()} pts</span>
-                        <a href="#stats" onClick={e=>e.preventDefault()} className="text-[10px] font-bold text-sky-500 uppercase tracking-wider hover:underline">View How to Earn &rsaquo;</a>
+                        <button onClick={(e)=>{e.preventDefault(); setShowBadgeInfoModal(true);}} className="text-[10px] font-bold text-sky-500 uppercase tracking-wider hover:underline cursor-pointer">View How to Earn &rsaquo;</button>
                       </div>
                     </div>
                   </div>
@@ -1405,7 +1420,14 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                           
                           {/* Pitch composer */}
                           <div className="space-y-1">
-                            <label className="font-bold text-slate-700 block text-[10px] uppercase">Your Pitch Statement (ACF psc_guest_pitch):</label>
+                            <label className="font-bold text-slate-700 block text-[10px] uppercase flex items-center gap-1.5 group relative w-max">
+                              <span>Your Pitch Statement (ACF psc_guest_pitch):</span>
+                              <Info className="w-3.5 h-3.5 opacity-50 text-slate-500 cursor-pointer" />
+                              <div className="absolute left-0 bottom-full mb-2 w-56 bg-slate-800 text-slate-200 text-xs p-3 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 font-normal normal-case shadow-xl pointer-events-none">
+                                Provide a brief explanation of why you would be a great fit for their show.
+                                <div className="absolute left-6 top-full w-2.5 h-2.5 bg-slate-800 transform rotate-45 -mt-[5px]"></div>
+                              </div>
+                            </label>
                             <textarea 
                               value={pitchText}
                               onChange={(e) => setPitchText(e.target.value)}
@@ -1771,6 +1793,49 @@ export const LiveStudio: React.FC<LiveStudioProps> = ({
                     <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                       <h4 className="text-sm font-bold text-slate-900 mb-2 leading-relaxed">{review.title}</h4>
                       <p className="text-base text-slate-700 italic leading-relaxed">"{review.text}"</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Badges Info Modal */}
+      {showBadgeInfoModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="font-display text-xl font-black uppercase tracking-wider flex items-center gap-2 text-slate-800">
+                <Award className="w-6 h-6 text-amber-500" />
+                Badge Requirements
+              </h2>
+              <button 
+                onClick={() => setShowBadgeInfoModal(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors border border-slate-200 shadow-sm"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: 'new_talent', icon: Sparkles, iconColor: 'text-purple-500', name: 'New Talent', description: 'Complete your profile and make your first connection.', condition: 'Profile 100% + 1 Connection' },
+                  { id: 'rising_star', icon: Flame, iconColor: 'text-orange-500', name: 'Rising Star', description: 'Be highly rated in your first 3 completed episodes.', condition: '3 Reviews · 4.5+ Avg' },
+                  { id: 'top_rated', icon: Star, iconColor: 'text-amber-500', name: 'Top Rated', description: 'Maintain a 4.8+ rating over 10 or more episodes.', condition: '10+ Reviews · 4.8+ Avg' },
+                  { id: 'community_fav', icon: Heart, iconColor: 'text-pink-500', name: 'Community Favorite', description: 'Receive 5+ glowing textual reviews praising your specific topics from other creators.', condition: '5+ Written Reviews' },
+                  { id: 'highly_rec', icon: ThumbsUp, iconColor: 'text-blue-500', name: 'Highly Recommended', description: 'Voted highly likely to refer by 5 different connection partners.', condition: '5+ Referrals' },
+                  { id: 'consistent', icon: Activity, iconColor: 'text-emerald-500', name: 'Consistent Contributor', description: 'Participated in at least one episode a month for 6 consecutive months.', condition: '6 Months Activity' }
+                ].map(badge => (
+                  <div key={badge.id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm space-y-3">
+                    <div className="flex items-center gap-2">
+                      <badge.icon className={`w-5 h-5 ${badge.iconColor} fill-current flex-shrink-0`} />
+                      <h3 className="font-bold text-slate-800">{badge.name}</h3>
+                    </div>
+                    <p className="text-sm text-slate-600 leading-relaxed">{badge.description}</p>
+                    <div className="inline-block bg-slate-100 px-2 py-1 rounded text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+                      Requires: {badge.condition}
                     </div>
                   </div>
                 ))}

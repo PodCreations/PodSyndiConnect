@@ -7,6 +7,7 @@ import { LiveStudio } from './components/LiveStudio';
 import { CodeGeneratorTab } from './components/CodeGeneratorTab';
 import { MemberPortal } from './components/MemberPortal';
 import { AiMatchPage } from './components/AiMatchPage';
+import { DevPanel } from './components/DevPanel';
 import { 
   Puzzle, 
   Wrench, 
@@ -74,7 +75,7 @@ export default function App() {
   });
 
   // Simulator navigation tab state
-  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'home' | 'studio' | 'database' | 'code' | 'portal' | 'aimatch'>('home');
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'home' | 'studio' | 'database' | 'code' | 'portal' | 'aimatch' | 'dev'>('home');
 
   // Hoisted state for Live Viewer context modeling
   const [viewerType, setViewerType] = useState<'anonymous' | 'guest' | 'host'>('host');
@@ -183,6 +184,17 @@ export default function App() {
             }`}
           >
             PHP Settings Page
+          </button>
+          <button 
+            onClick={() => setActiveWorkspaceTab('dev')}
+            className={`transition-colors cursor-pointer py-1 border-b-2 font-semibold flex items-center gap-1 ${
+              activeWorkspaceTab === 'dev' 
+                ? 'text-emerald-400 border-emerald-400' 
+                : 'text-slate-400 hover:text-emerald-200 border-transparent'
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            Dev Panel
           </button>
         </nav>
 
@@ -549,6 +561,10 @@ export default function App() {
 
             {activeWorkspaceTab === 'code' && (
               <CodeGeneratorTab weights={weights} />
+            )}
+
+            {activeWorkspaceTab === 'dev' && (
+              <DevPanel />
             )}
           </div>
 

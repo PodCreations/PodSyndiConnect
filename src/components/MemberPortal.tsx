@@ -52,6 +52,22 @@ interface MemberPortalProps {
   setActiveWorkspaceTab: (tab: 'home' | 'studio' | 'database' | 'code' | 'portal' | 'aimatch') => void;
 }
 
+
+const FieldLabel = ({ label, tooltip, colorClass = "text-slate-400" }: { label: string, tooltip?: string, colorClass?: string }) => (
+  <label className={`flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest mb-1 group relative w-max ${colorClass}`}>
+    <span>{label}</span>
+    {tooltip && (
+      <>
+        <Info className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity cursor-pointer" />
+        <div className="absolute left-0 bottom-full mb-2 w-56 bg-slate-800 text-slate-200 text-xs p-3 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 font-normal normal-case tracking-normal shadow-xl border border-slate-700 pointer-events-none">
+          {tooltip}
+          <div className="absolute left-6 top-full w-2.5 h-2.5 bg-slate-800 transform rotate-45 -mt-[5px] border-r border-b border-slate-700"></div>
+        </div>
+      </>
+    )}
+  </label>
+);
+
 export const MemberPortal: React.FC<MemberPortalProps> = ({
   guests,
   hosts,
@@ -116,6 +132,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
 
   // Active sub-tab in portal: guest form or host form or connections
   const [portalSubTab, setPortalSubTab] = useState<'dashboard' | 'guest' | 'host' | 'connections'>('dashboard');
+  const [showBadgeInfoModal, setShowBadgeInfoModal] = useState(false);
 
 
   // Success indicator message state
@@ -756,7 +773,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                   <div className="flex items-center gap-2 bg-slate-100/50 border border-slate-200 border-dashed text-slate-400 rounded-xl px-3 py-2 font-bold text-xs"><Heart className="w-4 h-4 text-slate-300" /> Community Fav (Locked)</div>
                   <div className="flex items-center gap-2 bg-slate-100/50 border border-slate-200 border-dashed text-slate-400 rounded-xl px-3 py-2 font-bold text-xs"><Award className="w-4 h-4 text-slate-300" /> Top Rated (Locked)</div>
                 </div>
-                <button className="text-xs font-bold text-amber-600 bg-amber-100 hover:bg-amber-200 px-4 py-2 rounded-lg transition-colors w-full z-10">
+                <button onClick={() => setShowBadgeInfoModal(true)} className="text-xs font-bold text-amber-600 bg-amber-100 hover:bg-amber-200 px-4 py-2 rounded-lg transition-colors w-full z-10 cursor-pointer">
                   View Badge Requirements
                 </button>
               </div>
@@ -1307,7 +1324,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Speaker Display Name</label>
+                <FieldLabel label="Speaker Display Name" tooltip="The name that will be visible to Hosts when they view your profile." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1318,7 +1335,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Contact Email (Private)</label>
+                <FieldLabel label="Contact Email (Private)" tooltip="Your email address for notifications and direct contact. This is kept private until you accept a connection." />
                 <input
                   type="email"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1329,7 +1346,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Speaker Bio Excerpt</label>
+                <FieldLabel label="Speaker Bio Excerpt" tooltip="A short, engaging introduction about who you are and what value you bring to a podcast." />
                 <textarea
                   rows={3}
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1340,7 +1357,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Your Primary Industry Accent</label>
+                <FieldLabel label="Your Primary Industry Accent" tooltip="The main industry category you specialize in." />
                 <select
                   value={guestForm.industry}
                   onChange={(e) => setGuestForm({ ...guestForm, industry: e.target.value })}
@@ -1353,7 +1370,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Experience Level Options</label>
+                <FieldLabel label="Experience Level Options" tooltip="Your level of experience as a podcast speaker." />
                 <div className="flex gap-4 mt-2">
                   {['Beginner', 'Intermediate', 'Expert'].map(level => (
                     <label key={level} className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold cursor-pointer">
@@ -1371,7 +1388,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Physical Location Base</label>
+                <FieldLabel label="Physical Location Base" tooltip="Your city or country, useful for local matching or timezone coordination." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1382,7 +1399,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Recording Modality</label>
+                <FieldLabel label="Recording Modality" tooltip="How you prefer to record (e.g., Remote, In-Person, Hybrid)." />
                 <select
                   value={guestForm.remotePreference}
                   onChange={(e) => setGuestForm({ ...guestForm, remotePreference: e.target.value as any })}
@@ -1395,7 +1412,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Preferred Audience Size</label>
+                <FieldLabel label="Preferred Audience Size" tooltip="The type of show demographics you are looking to reach." />
                 <select
                   value={guestForm.audiencePreference}
                   onChange={(e) => setGuestForm({ ...guestForm, audiencePreference: e.target.value as any })}
@@ -1408,7 +1425,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Speaker Avatar URL</label>
+                <FieldLabel label="Speaker Avatar URL" tooltip="Link to a professional headshot or profile picture (must be a valid image URL)." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1419,7 +1436,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-[#D4AF37] mb-1">Header Background Image URL</label>
+                <FieldLabel label="Header Background Image URL" tooltip="Link to a wide banner image that displays at the top of your profile." colorClass="text-[#D4AF37]" />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1430,7 +1447,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2">My Topics of Expertise (Select as many as apply)</label>
+                <FieldLabel label="My Topics of Expertise (Select as many as apply)" tooltip="Select all topics you confidently speak about. Used for AI matching." />
                 <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/60 max-h-96 overflow-y-auto space-y-4">
                   {CATEGORIZED_TOPICS.map(cat => (
                     <div key={cat.category} className="space-y-1.5 pb-2 border-b border-slate-100 last:border-0 last:pb-0">
@@ -1465,7 +1482,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Interactive Formats Open To</label>
+                <FieldLabel label="Interactive Formats Open To" tooltip="What types of podcast formats you enjoy participating in." />
                 <div className="flex flex-wrap gap-2 mt-1">
                   {['Interview', 'Panel/Roundtable', 'Solo/Co-host'].map(f => {
                     const selected = (guestForm.preferredFormats || []).includes(f);
@@ -1491,7 +1508,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Dialect Speak Languages</label>
+                <FieldLabel label="Dialect Speak Languages" tooltip="Languages you are fluent in and can use for a podcast recording." />
                 <div className="flex flex-wrap gap-2 mt-1">
                   {AVAILABLE_LANGUAGES.map(lang => {
                     const active = (guestForm.languages || []).includes(lang);
@@ -1517,7 +1534,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Additional Filter Hashtags (Comma Separated)</label>
+                <FieldLabel label="Additional Filter Hashtags (Comma Separated)" tooltip="Custom keywords or tags to help hosts find you in search." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1528,7 +1545,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">My General Availability</label>
+                <FieldLabel label="My General Availability" tooltip="Your typical weekly availability for recording sessions (e.g., 'Tuesdays & Thursdays, 1 PM - 4 PM EST')." />
                 <textarea
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden min-h-[60px]"
                   placeholder="e.g. Tuesdays & Thursdays after 2pm EST, or share a Calendly link..."
@@ -1573,7 +1590,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Show Name (Title CPT)</label>
+                <FieldLabel label="Show Name (Title CPT)" tooltip="The official name of your podcast." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1584,7 +1601,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Booking Email (Secure)</label>
+                <FieldLabel label="Booking Email (Secure)" tooltip="Where you receive booking responses and notifications." />
                 <input
                   type="email"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1595,7 +1612,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Podcast Description & Audience Details</label>
+                <FieldLabel label="Podcast Description & Audience Details" tooltip="A description of what your podcast is about and who listens to it." />
                 <textarea
                   rows={3}
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1606,7 +1623,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Show Primary Subject</label>
+                <FieldLabel label="Show Primary Subject" tooltip="The main overarching topic of your podcast." />
                 <select
                   value={hostForm.industry}
                   onChange={(e) => setHostForm({ ...hostForm, industry: e.target.value })}
@@ -1619,7 +1636,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Expected Speaker Experience Level</label>
+                <FieldLabel label="Expected Speaker Experience Level" tooltip="The level of experience you require from your guests." />
                 <div className="flex gap-4 mt-2">
                   {['Beginner', 'Intermediate', 'Expert'].map(level => (
                     <label key={level} className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold cursor-pointer select-none">
@@ -1637,7 +1654,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Recording Base Location</label>
+                <FieldLabel label="Recording Base Location" tooltip="Where your podcast is based out of (city/country/timezone)." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1648,7 +1665,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Recording Accommodations</label>
+                <FieldLabel label="Recording Accommodations" tooltip="How you usually record your episodes (e.g., Remote via WebRTC, In-Person Studio)." />
                 <select
                   value={hostForm.remoteOptions}
                   onChange={(e) => setHostForm({ ...hostForm, remoteOptions: e.target.value as any })}
@@ -1661,7 +1678,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Broadcast Demographics Size</label>
+                <FieldLabel label="Broadcast Demographics Size" tooltip="The approximate size of your audience/listenership." />
                 <select
                   value={hostForm.audienceSize}
                   onChange={(e) => setHostForm({ ...hostForm, audienceSize: e.target.value as any })}
@@ -1674,7 +1691,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Podcast logo / Graphic URI</label>
+                <FieldLabel label="Podcast logo / Graphic URI" tooltip="Link to your podcast's square cover art/logo image." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1685,7 +1702,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-[#D4AF37] mb-1">Header Background Image URL</label>
+                <FieldLabel label="Header Background Image URL" tooltip="Link to a wide banner image that displays at the top of your profile." colorClass="text-[#D4AF37]" />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1696,7 +1713,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Speaker Prerequisites note</label>
+                <FieldLabel label="Speaker Prerequisites note" tooltip="Any specific requirements (e.g., must have professional mic, must pre-listen to an episode)." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1707,7 +1724,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2">Show Segment Topic Covers</label>
+                <FieldLabel label="Show Segment Topic Covers" tooltip="Topics you actively want guests to discuss on your show." />
                 <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/60 max-h-96 overflow-y-auto space-y-4">
                   {CATEGORIZED_TOPICS.map(cat => (
                     <div key={cat.category} className="space-y-1.5 pb-2 border-b border-slate-100 last:border-0 last:pb-0">
@@ -1742,7 +1759,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Interview Format Structure</label>
+                <FieldLabel label="Interview Format Structure" tooltip="The format style of your podcast." />
                 <select
                   value={hostForm.format}
                   onChange={(e) => setHostForm({ ...hostForm, format: e.target.value as any })}
@@ -1755,7 +1772,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Main Broadcast Dialects</label>
+                <FieldLabel label="Main Broadcast Dialects" tooltip="The language(s) spoken on your podcast." />
                 <div className="flex flex-wrap gap-2 mt-1">
                   {AVAILABLE_LANGUAGES.map(lang => {
                     const active = (hostForm.languages || []).includes(lang);
@@ -1781,7 +1798,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Show Tags (Comma Separated)</label>
+                <FieldLabel label="Show Tags (Comma Separated)" tooltip="Custom tags for your show to assist matching." />
                 <input
                   type="text"
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden"
@@ -1792,7 +1809,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1">Show Booking Availability</label>
+                <FieldLabel label="Show Booking Availability" tooltip="Your typical weekly time slots dedicated to recording podcast episodes." />
                 <textarea
                   className="w-full bg-white border border-slate-200 text-sm px-3.5 py-2 rounded-xl focus:ring-1 focus:ring-amber-500 outline-hidden min-h-[60px]"
                   placeholder="e.g. We record on Mondays 9am-12pm PST. Or drop a Calendly link..."
@@ -1818,6 +1835,49 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
           </div>
         )}
       </div>
+
+      {/* Badges Info Modal */}
+      {showBadgeInfoModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="font-display text-xl font-black uppercase tracking-wider flex items-center gap-2 text-slate-800">
+                <Award className="w-6 h-6 text-amber-500" />
+                Badge Requirements
+              </h2>
+              <button 
+                onClick={() => setShowBadgeInfoModal(false)}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors border border-slate-200 shadow-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { id: 'new_talent', icon: Sparkles, iconColor: 'text-purple-500', name: 'New Talent', description: 'Complete your profile and make your first connection.', condition: 'Profile 100% + 1 Connection' },
+                  { id: 'rising_star', icon: Flame, iconColor: 'text-orange-500', name: 'Rising Star', description: 'Be highly rated in your first 3 completed episodes.', condition: '3 Reviews · 4.5+ Avg' },
+                  { id: 'top_rated', icon: Star, iconColor: 'text-amber-500', name: 'Top Rated', description: 'Maintain a 4.8+ rating over 10 or more episodes.', condition: '10+ Reviews · 4.8+ Avg' },
+                  { id: 'community_fav', icon: Heart, iconColor: 'text-pink-500', name: 'Community Favorite', description: 'Receive 5+ glowing textual reviews praising your specific topics from other creators.', condition: '5+ Written Reviews' },
+                  { id: 'highly_rec', icon: ThumbsUp, iconColor: 'text-blue-500', name: 'Highly Recommended', description: 'Voted highly likely to refer by 5 different connection partners.', condition: '5+ Referrals' },
+                  { id: 'consistent', icon: Activity, iconColor: 'text-emerald-500', name: 'Consistent Contributor', description: 'Participated in at least one episode a month for 6 consecutive months.', condition: '6 Months Activity' }
+                ].map(badge => (
+                  <div key={badge.id} className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm space-y-3">
+                    <div className="flex items-center gap-2">
+                      <badge.icon className={`w-5 h-5 ${badge.iconColor} fill-current flex-shrink-0`} />
+                      <h3 className="font-bold text-slate-800">{badge.name}</h3>
+                    </div>
+                    <p className="text-sm text-slate-600 leading-relaxed">{badge.description}</p>
+                    <div className="inline-block bg-slate-100 px-2 py-1 rounded text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+                      Requires: {badge.condition}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
